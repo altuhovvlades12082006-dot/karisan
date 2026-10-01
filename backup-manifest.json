@@ -8,20 +8,20 @@
     "sha256": "665267789bb4bcccacb3c024c5056698b504fb3fe2c7ae6456f2592d4aa00ed8"
   },
   "dist/index.html": {
-    "bytes": 7061,
-    "sha256": "a4603ac63f15a300ae8a28d4c57768ca0689a86d3dd70e494a78fa0fccc85d1f"
+    "bytes": 7331,
+    "sha256": "e4242d7654bf5dfc2d157a1b55244565efa07d116849a8da58d042efb8da023d"
   },
   "dist/style.css": {
-    "bytes": 29176,
-    "sha256": "1fdb2ecb34664b045dd5c5c56745d6060123c5ec86ee62e1a4fcd3a229acf087"
+    "bytes": 31917,
+    "sha256": "70e332dca6e636fe088bfc1a0b0ba8557b93bb83e12c64b213abcdb13abecceb"
   },
   "dist/products.json": {
     "bytes": 78861,
     "sha256": "8836f3e914f385f4d320bd22aee92385604240ebcf1c2c645dd7e44d0d0f084d"
   },
   "dist/app.js": {
-    "bytes": 30183,
-    "sha256": "b8ea6200a4aa746bb0ab4e2ea56427f0f057c54f33060a776143fe966da302e0"
+    "bytes": 30816,
+    "sha256": "73608fdc1116449a63dba3f3e2d6d07de41027a8024af14e64e079bc501da74c"
   },
   "dist/story-player.js": {
     "bytes": 3947,
