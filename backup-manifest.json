@@ -8,20 +8,20 @@
     "sha256": "665267789bb4bcccacb3c024c5056698b504fb3fe2c7ae6456f2592d4aa00ed8"
   },
   "dist/index.html": {
-    "bytes": 7331,
-    "sha256": "e4242d7654bf5dfc2d157a1b55244565efa07d116849a8da58d042efb8da023d"
+    "bytes": 7337,
+    "sha256": "d9633deecc622bd58925f3fb03612da7bd31f672d217869505645ddc98d9d1f4"
   },
   "dist/style.css": {
-    "bytes": 31917,
-    "sha256": "70e332dca6e636fe088bfc1a0b0ba8557b93bb83e12c64b213abcdb13abecceb"
+    "bytes": 35082,
+    "sha256": "fbf6e5d2d96959e896ceb6c9063e00817de9cf51d81b117035a713d24624603e"
   },
   "dist/products.json": {
     "bytes": 78861,
     "sha256": "8836f3e914f385f4d320bd22aee92385604240ebcf1c2c645dd7e44d0d0f084d"
   },
   "dist/app.js": {
-    "bytes": 30816,
-    "sha256": "73608fdc1116449a63dba3f3e2d6d07de41027a8024af14e64e079bc501da74c"
+    "bytes": 31791,
+    "sha256": "56eebaa60a97dc95667ead5bbc0bfebb53d7fd0cd50cbed59ba5c8030105baf8"
   },
   "dist/story-player.js": {
     "bytes": 3947,
@@ -302,5 +302,9 @@
   "dist/assets/product-53980fa6ea.webp": {
     "bytes": 127912,
     "sha256": "55b463894fccb34cc02e4cb743d6fe7cffe7a261e7ffb436a8aa965d8e228e0e"
+  },
+  "dist/product.html": {
+    "bytes": 7358,
+    "sha256": "45bf20926038c80c10ed59d252c9062bab5ddc2f70e5649425f41934c201a850"
   }
 }
