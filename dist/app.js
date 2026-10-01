@@ -1,4 +1,4 @@
-import { StoryPlayer } from './story-player.js?v=shop-20260929b';
+import { StoryPlayer } from './story-player.js?v=1080-60-v1';
 'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let lang='uk';try{lang=localStorage.getItem('karisan-language')||'uk'}catch{}if(!['uk','ru','en'].includes(lang))lang='uk';
@@ -41,7 +41,7 @@ function timeFromProgress(p){if(!mobileQuery.matches)return p*25;for(let i=1;i<t
 function progressFromTime(t){if(!mobileQuery.matches)return t/25;for(let i=1;i<timeline.length;i++){const [p1,t1]=timeline[i], [p0,t0]=timeline[i-1];if(t<=t1&&t1>t0)return p0+(t-t0)/(t1-t0)*(p1-p0)}return 1}
 function getProgress(){if(reduced)return 0;return Math.max(0,Math.min(1,-story.getBoundingClientRect().top/Math.max(1,story.offsetHeight-innerHeight)))}
 function update(){const p=getProgress();$('#progress').style.width=`${p*100}%`;story.dataset.phase=p<.075?'opening':p>.93?'final':'motion';if(player)player.seek(timeFromProgress(p))}
-const loadText={uk:'Завантаження фрагмента…',ru:'Загрузка фрагмента…',en:'Loading this scene…'};
+const loadText={uk:'Завантаження відео…',ru:'Загрузка видео…',en:'Loading video…'};
 function mediaState(state){$('#video-loading').hidden=state!=='loading';$('#video-loading').textContent=loadText[lang];$('#video-error').hidden=state!=='error';$('#retry-video').hidden=state!=='error';story.dataset.mediaState=state}
 function initMedia(){player?.destroy();player=null;reduced=motionQuery.matches;document.documentElement.classList.toggle('reduced-motion',reduced);mediaState('ready');if(reduced){renderedStoryTime=0;setScene(0,true);story.dataset.phase='opening';return}player=new StoryPlayer({videos:[video,$('#hero-next')],onFrame:t=>{renderedStoryTime=t;story.dataset.frameTime=t.toFixed(3);setScene(t)},onState:mediaState});player.start();update()}
 $('#retry-video').addEventListener('click',()=>player?.retry());

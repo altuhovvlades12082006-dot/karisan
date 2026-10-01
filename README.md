@@ -12,7 +12,7 @@ Open http://localhost:4173. No Node dependencies or build step required.
 
 ## Contents
 
-- `dist/`: deployable Ukrainian, Russian and English storefront, all product images, catalogue, 4K and mobile animation frames.
+- `dist/`: deployable Ukrainian, Russian and English storefront, all product images, catalogue, 1080p60 forward and reverse video.
 - `media/original-4k.mov`: original supplied 3840×2160, 30fps footage, preserved unchanged.
 - `media/base-karisan.mp4`: additional existing source video.
 - `scripts/`: preview and catalogue import utilities.
@@ -20,7 +20,7 @@ Open http://localhost:4173. No Node dependencies or build step required.
 
 ## Behaviour
 
-Cart and favourites persist locally in the visitor browser. Prices and stock are an imported catalogue snapshot, not a live warehouse connection. Checkout, payments and order submission are not connected. Animation uses original 30fps frames and display-refresh blending; it is not a newly generated native 60fps video. Desktop frames are 4K, mobile frames are optimized to 1280 pixels wide. No paid generation was used.
+Cart and favourites persist locally in the visitor browser. Prices and stock are an imported catalogue snapshot, not a live warehouse connection. Checkout, payments and order submission are not connected. Animation uses native playback of 1080p videos converted to 60fps with frame interpolation from the supplied 30fps original. Forward and reversed copies avoid continuous seeking. No paid generation was used.
 
 ## Live site
 
