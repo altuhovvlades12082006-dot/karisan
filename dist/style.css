@@ -154,3 +154,50 @@ header{justify-content:space-between}
 .skip{display:inline-flex;align-items:center;gap:8px;min-height:44px}
 .skip::after{transform:rotate(135deg);margin:0}
 @media(max-width:700px){.quality,.scene-marker{display:none}}
+
+/* Quiet luxury: warm surfaces, fine outlines and restrained motion. */
+header{background:#19131fe8;border-bottom:1px solid #d9c7ea1a;backdrop-filter:blur(18px)}
+.header-icon,.menu-button,#language-button{transition:color .2s,background .2s;min-height:44px}
+.story-copy .pill{min-height:50px;padding:14px 24px;background:#f0e4fa;color:#38283f;border-color:#f0e4fa;box-shadow:0 8px 28px #11091a1a}
+.story-copy .pill:hover{background:#fff8ff;border-color:#fff8ff}
+.story-copy .pill span[aria-hidden]{transition:transform .25s}
+.story-copy .pill:hover span[aria-hidden]{transform:translate(2px,-2px)}
+.quality{display:none}
+.catalog{background:#f8f6f3;padding-top:90px;padding-bottom:100px}
+.catalog-heading{padding-bottom:32px;margin-bottom:34px}
+.catalog-heading h2{font-family:Georgia,'Times New Roman',serif;font-size:clamp(42px,5vw,68px);font-weight:400;letter-spacing:-.045em}
+.catalog-heading>p{color:#726877;max-width:340px}
+#collection-categories{gap:10px;border:0;margin-bottom:28px}
+.collection-tile{border:1px solid #8b749321;border-radius:14px;background:#ffffff65;min-height:134px;gap:16px;transition:background .2s,border-color .2s,transform .2s}
+.collection-tile.active{background:#eae3ee;border-color:#b39abd80;color:#594363}
+.collection-tile>.category-icon{color:#86718f;width:42px;height:42px}
+#fabric-options{gap:8px}
+#fabric-options a{border-radius:30px;padding:10px 16px;background:#ffffff70;min-height:38px;display:inline-flex;align-items:center}
+#fabric-options a.active{background:#705879;border-color:#705879}
+.catalog-tools{border-top:0;border-bottom:1px solid #8b749328;padding-top:4px;padding-bottom:24px}
+.catalog-tools input,.catalog-tools select{border-bottom-color:#b6a6bc;background:transparent}
+.catalog .products{gap:44px 26px}
+.catalog .product-image{border-radius:15px;overflow:hidden;background:#eee9e4}
+.catalog .product-image img{transition:transform .55s cubic-bezier(.2,.65,.3,1)}
+.catalog .product h4{font-size:15px;line-height:1.6;letter-spacing:-.015em;color:#39303f}
+.catalog .product .price{font-size:15px;letter-spacing:-.025em}
+.catalog .product-category{font-size:9px;letter-spacing:.12em;color:#786782}
+.catalog .product>.favorite-button{border-radius:50%;background:#fffdf7e8;box-shadow:0 3px 14px #35233e0c;border:1px solid #ffffffa0}
+.catalog .product-stock{font-size:11px;letter-spacing:.015em}
+.store-location{padding-block:54px;gap:48px}
+.store-location h2{font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-.035em}
+.store-location iframe{border-radius:18px;filter:saturate(.65)}
+footer .social-links a{min-height:44px}
+#menu{background:#201726;border-left-color:#d9c7ea26}
+#menu-search,#menu-shortcuts button{border-radius:12px}
+#shop-dialog{border:1px solid #bda7cb40;border-radius:18px}
+.checkout-start{border-radius:12px;background:#705879;border-color:#705879}
+@media(hover:hover){.collection-tile:hover{transform:translateY(-3px);border-color:#a990b480;background:#f0eaf3}.catalog .product:hover .product-image img{transform:scale(1.035)}}
+@media(max-width:700px){
+ .catalog{padding:48px 20px 60px}.catalog-heading h2{font-size:44px}.catalog-heading>p{line-height:1.75}
+ #collection-categories{gap:8px}.collection-tile{min-height:103px;border-radius:12px;gap:12px;font-size:11px}.collection-tile>.category-icon{width:32px;height:32px}
+ #fabric-options{flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin}#fabric-options a{white-space:nowrap;flex-shrink:0;font-size:11px;min-height:40px;padding:9px 14px}
+ .catalog .products{gap:30px 14px}.catalog .product-image{border-radius:12px}.catalog .product h4{font-size:13px;line-height:1.55}.catalog .product .price{font-size:14px}.catalog .product-category{font-size:8px;letter-spacing:.06em}.catalog .product-stock{font-size:11px}
+ .story-copy .pill{min-height:46px;padding:12px 22px}.story-copy #scene-description{line-height:1.65}
+ .store-location{padding-block:32px;gap:24px}.store-location iframe{border-radius:14px}.store-location .pill{min-height:48px}
+}
