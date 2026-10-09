@@ -156,6 +156,8 @@ header{justify-content:space-between}
 @media(max-width:700px){.quality,.scene-marker{display:none}}
 
 /* Quiet luxury: warm surfaces, fine outlines and restrained motion. */
+@media(min-width:701px){#collection-categories{grid-template-columns:repeat(7,minmax(0,1fr))}}
+@media(max-width:700px){#collection-categories .collection-tile:nth-child(2),#collection-categories .collection-tile:last-child{grid-column:span 2;flex-direction:row;gap:18px}}
 header{background:#19131fe8;border-bottom:1px solid #d9c7ea1a;backdrop-filter:blur(18px)}
 .header-icon,.menu-button,#language-button{transition:color .2s,background .2s;min-height:44px}
 .story-copy .pill{min-height:50px;padding:14px 24px;background:#f0e4fa;color:#38283f;border-color:#f0e4fa;box-shadow:0 8px 28px #11091a1a}
