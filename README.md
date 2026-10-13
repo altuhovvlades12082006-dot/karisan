@@ -10,6 +10,8 @@ python3 -m http.server 4173 --directory dist
 
 Open http://localhost:4173. No Node dependencies or build step required.
 
+Admin panel: http://localhost:4173/admin/
+
 ## Contents
 
 - `dist/`: deployable Ukrainian, Russian and English storefront, all product images, catalogue, 1080p60 forward and reverse video.
@@ -17,6 +19,21 @@ Open http://localhost:4173. No Node dependencies or build step required.
 - `media/base-karisan.mp4`: additional existing source video.
 - `scripts/`: preview and catalogue import utilities.
 - `.openai/hosting.json`: existing Sites project configuration.
+- `dist/admin/`: responsive Kari-San admin panel.
+- `supabase/migrations/001_commerce.sql`: database, authentication roles, row-level security and secure order creation.
+- `scripts/export-supabase-seed.py`: converts the current product snapshot into `supabase/seed.sql`.
+
+## Admin and live catalogue setup
+
+The admin opens in device-local demo mode until Supabase is configured. To activate shared data:
+
+1. Create a Supabase project and run `supabase/migrations/001_commerce.sql` in its SQL editor.
+2. Run `python3 scripts/export-supabase-seed.py`, then run the generated `supabase/seed.sql` in Supabase.
+3. Create the first user in Supabase Authentication.
+4. Add that user's UUID to `public.admin_profiles` with role `owner`.
+5. Put the project URL and public anon key in `dist/commerce-config.js`.
+
+Only the public anon key belongs in browser code. Never commit a Supabase service-role key.
 
 ## Behaviour
 
