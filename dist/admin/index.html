@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#17131d">
+  <title>Kari-San Admin</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="admin.css?v=1">
+  <script type="module" src="admin.js?v=1"></script>
+</head>
+<body>
+  <div id="setup-screen" class="setup-screen" hidden>
+    <section class="setup-card">
+      <div class="brand">kari-san<span>ADMIN</span></div>
+      <p class="eyebrow">Підключення</p>
+      <h1>Адмінка готова до роботи</h1>
+      <p>Для спільної роботи підключіть Supabase. До цього можна відкрити локальний демо-режим — зміни зберігатимуться лише в цьому браузері.</p>
+      <div class="setup-actions">
+        <button id="demo-enter" class="primary">Відкрити демо</button>
+        <a href="../" class="secondary">Повернутися до магазину</a>
+      </div>
+    </section>
+  </div>
+
+  <div id="login-screen" class="login-screen" hidden>
+    <form id="login-form" class="login-card">
+      <div class="brand">kari-san<span>ADMIN</span></div>
+      <p class="eyebrow">Захищений вхід</p>
+      <h1>Керуйте магазином</h1>
+      <label>Email<input name="email" type="email" autocomplete="username" required></label>
+      <label>Пароль<input name="password" type="password" autocomplete="current-password" required></label>
+      <p id="login-error" class="form-error" role="alert"></p>
+      <button class="primary" type="submit">Увійти</button>
+    </form>
+  </div>
+
+  <div id="app" class="app" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-brand brand">kari-san<span>ADMIN</span></div>
+      <nav id="main-nav">
+        <button data-view="dashboard" class="active"><i>⌂</i>Огляд</button>
+        <button data-view="products"><i>◇</i>Товари</button>
+        <button data-view="orders"><i>□</i>Замовлення</button>
+        <button data-view="customers"><i>○</i>Клієнти</button>
+        <button data-view="content"><i>✦</i>Контент</button>
+        <button data-view="settings"><i>⚙</i>Налаштування</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <span id="mode-badge" class="mode-badge"></span>
+        <a href="../" target="_blank">Відкрити магазин ↗</a>
+        <button id="logout-button">Вийти</button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <button id="mobile-nav" class="mobile-nav" aria-label="Меню">☰</button>
+        <div><p id="today"></p><h1 id="page-title">Огляд</h1></div>
+        <div class="top-actions"><button id="global-add" class="primary">＋ Додати товар</button><span class="avatar">KS</span></div>
+      </header>
+
+      <section id="view-dashboard" class="view active">
+        <div class="hero-panel">
+          <div><p class="eyebrow">KARI-SAN CONTROL CENTER</p><h2>Усе важливе<br><em>в одному місці.</em></h2><p>Товари, залишки, замовлення та контент магазину.</p></div>
+          <div class="hero-orb"><span id="hero-orders">0</span><small>нових замовлень</small></div>
+        </div>
+        <div id="stats" class="stats"></div>
+        <div class="dashboard-grid">
+          <section class="panel"><div class="panel-heading"><div><p class="eyebrow">ОСТАННІ ДІЇ</p><h3>Замовлення</h3></div><button data-go="orders">Переглянути всі</button></div><div id="recent-orders"></div></section>
+          <section class="panel"><div class="panel-heading"><div><p class="eyebrow">УВАГА</p><h3>Мало на складі</h3></div><button data-go="products">До товарів</button></div><div id="low-stock"></div></section>
+        </div>
+      </section>
+
+      <section id="view-products" class="view">
+        <div class="section-tools">
+          <label class="search"><span>⌕</span><input id="product-search" type="search" placeholder="Пошук за назвою або SKU"></label>
+          <select id="category-filter"><option value="">Усі категорії</option></select>
+          <button id="add-product" class="primary">＋ Додати товар</button>
+        </div>
+        <section class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Товар</th><th>Категорія</th><th>Ціна</th><th>Залишок</th><th>Статус</th><th></th></tr></thead><tbody id="product-table"></tbody></table></div></section>
+      </section>
+
+      <section id="view-orders" class="view">
+        <div class="section-tools"><label class="search"><span>⌕</span><input id="order-search" type="search" placeholder="Номер, ім’я або телефон"></label><select id="order-status"><option value="">Усі статуси</option><option value="new">Нові</option><option value="processing">В роботі</option><option value="shipped">Відправлені</option><option value="completed">Виконані</option><option value="cancelled">Скасовані</option></select></div>
+        <section class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Замовлення</th><th>Клієнт</th><th>Доставка</th><th>Сума</th><th>Статус</th><th></th></tr></thead><tbody id="order-table"></tbody></table></div></section>
+      </section>
+
+      <section id="view-customers" class="view"><section class="panel"><div class="panel-heading"><div><p class="eyebrow">АУДИТОРІЯ</p><h3>Клієнти</h3></div></div><div id="customer-list" class="customer-list"></div></section></section>
+
+      <section id="view-content" class="view">
+        <div class="content-grid">
+          <form id="content-form" class="panel form-panel"><p class="eyebrow">ГОЛОВНА СТОРІНКА</p><h3>Тексти та повідомлення</h3><label>Акційний текст<input name="announcement" placeholder="Безкоштовна доставка від 2000 ₴"></label><label>Заголовок каталогу<input name="catalog_title" value="Ваш простір. Ваш вибір."></label><label>Опис<textarea name="catalog_intro" rows="4">Від першого дотику до спокійного сну. Знайдіть текстиль для свого дому.</textarea></label><button class="primary">Зберегти</button></form>
+          <form id="promo-form" class="panel form-panel"><p class="eyebrow">ПРОМОКОДИ</p><h3>Нова пропозиція</h3><label>Код<input name="code" placeholder="WELCOME10" required></label><label>Знижка, %<input name="discount" type="number" min="1" max="90" value="10"></label><label>Активний до<input name="expires_at" type="date"></label><button class="primary">Створити промокод</button><div id="promo-list"></div></form>
+        </div>
+      </section>
+
+      <section id="view-settings" class="view">
+        <form id="settings-form" class="panel form-panel settings-form"><p class="eyebrow">МАГАЗИН</p><h3>Основні налаштування</h3><div class="form-grid"><label>Назва магазину<input name="store_name" value="Kari-San"></label><label>Телефон<input name="phone" value="+38 (067) 250-49-39"></label><label>Email<input name="email" type="email" value="kari-san@ukr.net"></label><label>Валюта<select name="currency"><option>UAH</option><option>EUR</option></select></label><label>Нова пошта<input name="nova_enabled" type="checkbox" checked></label><label>Укрпошта<input name="ukr_enabled" type="checkbox" checked></label></div><button class="primary">Зберегти налаштування</button></form>
+        <section class="panel connection-panel"><p class="eyebrow">ІНТЕГРАЦІЇ</p><h3>Стан системи</h3><div id="connection-state"></div></section>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="product-dialog">
+    <form id="product-form" method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">КАТАЛОГ</p><h2 id="product-dialog-title">Новий товар</h2></div><button value="cancel" class="close" aria-label="Закрити">×</button></div>
+      <input type="hidden" name="id">
+      <div class="form-grid three"><label>Назва українською<input name="uk" required></label><label>Назва російською<input name="ru"></label><label>Назва англійською<input name="en"></label></div>
+      <div class="form-grid"><label>Категорія<select name="category" required></select></label><label>Базова ціна, ₴<input name="price" type="number" min="0" step="1" required></label><label>Залишок<input name="stock" type="number" min="0" step="1" required></label><label>SKU<input name="sku"></label></div>
+      <label>Посилання на зображення<input name="image" placeholder="assets/product.webp або https://..."></label>
+      <label>Опис<textarea name="description" rows="4"></textarea></label>
+      <div class="check-row"><label><input name="active" type="checkbox" checked> Опублікований</label><label><input name="is_new" type="checkbox"> Новинка</label></div>
+      <p id="product-form-error" class="form-error"></p>
+      <div class="dialog-actions"><button value="cancel" class="secondary">Скасувати</button><button id="save-product" type="submit" value="default" class="primary">Зберегти товар</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
