@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#17131d">
   <title>Kari-San Admin</title>
   <meta name="robots" content="noindex,nofollow">
-  <link rel="stylesheet" href="admin.css?v=1">
-  <script type="module" src="admin.js?v=1"></script>
+  <link rel="stylesheet" href="admin.css?v=2">
+  <script type="module" src="admin.js?v=2"></script>
 </head>
 <body>
   <div id="setup-screen" class="setup-screen" hidden>
@@ -41,6 +41,7 @@
       <nav id="main-nav">
         <button data-view="dashboard" class="active"><i>⌂</i>Огляд</button>
         <button data-view="products"><i>◇</i>Товари</button>
+        <button data-view="categories"><i>▦</i>Категорії</button>
         <button data-view="orders"><i>□</i>Замовлення</button>
         <button data-view="customers"><i>○</i>Клієнти</button>
         <button data-view="content"><i>✦</i>Контент</button>
@@ -81,6 +82,10 @@
         <section class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Товар</th><th>Категорія</th><th>Ціна</th><th>Залишок</th><th>Статус</th><th></th></tr></thead><tbody id="product-table"></tbody></table></div></section>
       </section>
 
+      <section id="view-categories" class="view">
+        <form id="category-form" class="panel form-panel"><h3>Категорії</h3><input name="original" type="hidden"><div class="form-grid"><label>Код (латиниця)<input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" maxlength="60"></label><label>Назва українською<input name="uk" required></label><label>Назва російською<input name="ru"></label><label>Назва англійською<input name="en"></label><label>Порядок<input name="sort_order" type="number" value="0" step="1" required></label><label><input name="active" type="checkbox" checked> Активна</label></div><p id="category-error" class="form-error" role="alert"></p><div class="dialog-actions"><button type="reset" class="secondary">Очистити</button><button class="primary">Зберегти категорію</button></div></form>
+        <div id="category-list" class="panel"></div>
+      </section>
       <section id="view-orders" class="view">
         <div class="section-tools"><label class="search"><span>⌕</span><input id="order-search" type="search" placeholder="Номер, ім’я або телефон"></label><select id="order-status"><option value="">Усі статуси</option><option value="new">Нові</option><option value="processing">В роботі</option><option value="shipped">Відправлені</option><option value="completed">Виконані</option><option value="cancelled">Скасовані</option></select></div>
         <section class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Замовлення</th><th>Клієнт</th><th>Доставка</th><th>Сума</th><th>Статус</th><th></th></tr></thead><tbody id="order-table"></tbody></table></div></section>
@@ -104,18 +109,22 @@
 
   <dialog id="product-dialog">
     <form id="product-form" method="dialog">
-      <div class="dialog-head"><div><p class="eyebrow">КАТАЛОГ</p><h2 id="product-dialog-title">Новий товар</h2></div><button value="cancel" class="close" aria-label="Закрити">×</button></div>
+      <div class="dialog-head"><div><p class="eyebrow">КАТАЛОГ</p><h2 id="product-dialog-title">Новий товар</h2></div><button value="cancel" formnovalidate class="close" aria-label="Закрити">×</button></div>
       <input type="hidden" name="id">
       <div class="form-grid three"><label>Назва українською<input name="uk" required></label><label>Назва російською<input name="ru"></label><label>Назва англійською<input name="en"></label></div>
-      <div class="form-grid"><label>Категорія<select name="category" required></select></label><label>Базова ціна, ₴<input name="price" type="number" min="0" step="1" required></label><label>Залишок<input name="stock" type="number" min="0" step="1" required></label><label>SKU<input name="sku"></label></div>
+      <div class="form-grid"><label>Категорія<select name="category" required></select></label><label>Базова ціна, ₴<input name="price" type="number" min="0" step="0.01" required></label></div>
       <label>Посилання на зображення<input name="image" placeholder="assets/product.webp або https://..."></label>
+      <label>Додаткові фото (одне посилання на рядок)<textarea name="images" rows="3"></textarea></label>
+      <label>Завантажити фото (JPEG, PNG, WebP; до 5 МБ)<input id="photo-upload" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><div id="photo-preview" class="photo-preview"></div><p id="upload-status" role="status"></p>
+      <div class="panel-heading"><h3>Розміри та варіанти</h3><button id="add-variant" type="button" class="secondary">＋ Варіант</button></div><div id="variant-list"></div>
       <label>Опис<textarea name="description" rows="4"></textarea></label>
       <div class="check-row"><label><input name="active" type="checkbox" checked> Опублікований</label><label><input name="is_new" type="checkbox"> Новинка</label></div>
       <p id="product-form-error" class="form-error"></p>
-      <div class="dialog-actions"><button value="cancel" class="secondary">Скасувати</button><button id="save-product" type="submit" value="default" class="primary">Зберегти товар</button></div>
+      <div class="dialog-actions"><button value="cancel" formnovalidate class="secondary">Скасувати</button><button id="save-product" type="submit" value="default" class="primary">Зберегти товар</button></div>
     </form>
   </dialog>
 
+  <dialog id="order-dialog"><div class="dialog-head"><h2>Замовлення</h2><button id="close-order" class="close" aria-label="Закрити">×</button></div><div id="order-details"></div></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
