@@ -1,0 +1,10 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {validateProduct,imageExtension} from '../lib/catalog-validation.mjs';
+const seed=JSON.parse(readFileSync(new URL('../data/catalog-seed.json',import.meta.url)));
+test('all imported products can be edited without schema loss',()=>{for(const p of seed){const clean=validateProduct(p);assert.equal(clean.id,p.id);assert.equal(clean.variants.length,p.variants.length);}});
+test('prices, stock and duplicate IDs rejected',()=>{for(const edit of[p=>p.variants[0].price=-1,p=>p.variants[0].stock=1.5,p=>p.variants.push(p.variants[0]),p=>p.variants[0].price=0.123]){const p=structuredClone(seed[0]);edit(p);assert.throws(()=>validateProduct(p));}});
+test('ordinary decimal prices accepted',()=>{const p=structuredClone(seed[0]);p.variants[0].price=19.99;assert.equal(validateProduct(p).variants[0].price,19.99);});
+test('unsafe image URLs rejected',()=>{for(const image of['javascript:alert(1)','assets/a.webp" onerror="alert(1)','https://other.example/a.png','/media/test.svg'])assert.throws(()=>validateProduct({...seed[0],image}));});
+test('upload signature must match mime',()=>{assert.equal(imageExtension(new Uint8Array([255,216,255]),'image/jpeg'),'jpg');assert.throws(()=>imageExtension(new TextEncoder().encode('<svg onload=alert(1)>'),'image/png'));});

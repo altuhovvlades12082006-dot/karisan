@@ -1,7 +1,7 @@
 import urllib.request,json,re,concurrent.futures,hashlib
 from pathlib import Path
 from bs4 import BeautifulSoup
-root=Path(__file__).resolve().parents[1]; assets=root/'dist/assets'
+root=Path(__file__).resolve().parents[1]; assets=root/'public/assets'
 cats={'gold':'postelnoe-bele-20/postelnoe-bele-byaz/','satin':'postelnoe-bele-20/satin/','stripe':'postelnoe-bele-20/postelnoe-bele-stripe-satin/','bedding':'postelnoe-bele-20/','towels':'polotentsa-18/','duvets':'odeyala-25/','protectors':'namatrasniki-57/','covers':'pokryivala-17/','pillows':'podushki-59/'}
 def fetch(pair):
  cat,path=pair;s=BeautifulSoup(urllib.request.urlopen('https://kari-san.ua/'+path,timeout=30).read(),'html.parser');out=[]
@@ -40,6 +40,6 @@ def image(p):
  import io
  im=Image.open(io.BytesIO(data));im.thumbnail((800,800));dest='product-'+p['id']+'.webp';im.convert('RGB').save(assets/dest,'WEBP',quality=85);p['image']='assets/'+dest
 with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:list(ex.map(image,items))
-(root/'dist/products.json').write_text(json.dumps(items,ensure_ascii=False))
+(root/'public/products.json').write_text(json.dumps(items,ensure_ascii=False))
 print('Imported',len(items),'products')
 print('English remaining Cyrillic:',[(p['id'],p['en']) for p in items if re.search('[а-яА-Я]',p['en'])])

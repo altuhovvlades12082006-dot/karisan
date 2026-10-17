@@ -15,6 +15,6 @@ class Handler(SimpleHTTPRequestHandler):
     if not b:break
     outputfile.write(b);self.remaining-=len(b)
   except (BrokenPipeError,ConnectionResetError):pass
-os.chdir(os.path.join(os.path.dirname(__file__),'../dist'))
+os.chdir(os.path.join(os.path.dirname(__file__),'../public'))
 print('Local: http://127.0.0.1:4173/',flush=True)
 ThreadingHTTPServer(('127.0.0.1',4173),Handler).serve_forever()

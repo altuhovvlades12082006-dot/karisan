@@ -2,7 +2,7 @@ import json,urllib.request,re,concurrent.futures,hashlib,datetime
 from pathlib import Path
 from bs4 import BeautifulSoup
 root=Path(__file__).resolve().parents[1];cache=root/'source-cache';cache.mkdir(exist_ok=True)
-products=json.loads((root/'dist/products.json').read_text())
+products=json.loads((root/'public/products.json').read_text())
 def soup(url):
  file=cache/(hashlib.sha1(url.encode()).hexdigest()+'.html')
  if not file.exists():file.write_bytes(urllib.request.urlopen(url,timeout=30).read())
@@ -18,7 +18,7 @@ def parse(p):
  d=s.select_one('#tab-description');desc=d.get_text(' ',strip=True) if d else ''
  p['variants']=variants;p['sourceDescription']=desc;p['updatedAt']=datetime.datetime.now(datetime.timezone.utc).isoformat();return p
 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ex:out=list(ex.map(parse,products))
-(root/'dist/products.json').write_text(json.dumps(out,ensure_ascii=False))
+(root/'public/products.json').write_text(json.dumps(out,ensure_ascii=False))
 seen=set()
 for p in out:
  d=p['sourceDescription'][:500]

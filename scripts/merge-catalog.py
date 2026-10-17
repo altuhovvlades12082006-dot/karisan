@@ -3,7 +3,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
-old=json.loads((ROOT/'dist/products.json').read_text()); byurl={p['url']:p for p in old}
+old=json.loads((ROOT/'public/products.json').read_text()); byurl={p['url']:p for p in old}
 rows=[p for c in json.loads((ROOT/'source-cache/catalog-audit-20261009.json').read_text()) for p in c['items']]
 stamp=datetime.datetime.now(datetime.timezone.utc).isoformat()
 def enrich(p):
@@ -30,8 +30,8 @@ def enrich(p):
  if not variants:
   # Keep an unavailable product visible without offering an unverified price.
   result['variants']=[{'id':'unavailable-'+result['id'],'uk':'Стандарт','ru':'Стандарт','en':'Standard','price':None,'stock':0,'sku':'','pillowSizes':[]}]
- image=previous.get('image');dest=ROOT/'dist/assets'/('product-'+result['id']+'.webp')
- if not image or not (ROOT/'dist'/image).exists():
+ image=previous.get('image');dest=ROOT/'public/assets'/('product-'+result['id']+'.webp')
+ if not image or not (ROOT/'public'/image).exists():
   u=p['imageUrl']
   if not u:
    page=BeautifulSoup(urllib.request.urlopen(p['url'],timeout=30).read(),'html.parser');node=page.select_one('meta[property="og:image"]') or page.select_one('.thumbnails a[href]')
@@ -51,6 +51,6 @@ for p in result:
  if key not in unique:unique[key]=p
 result=list(unique.values())
 assert len({p['id'] for p in result})==len(result)
-assert all((ROOT/'dist'/p['image']).exists() for p in result)
-(ROOT/'dist/products.json').write_text(json.dumps(result,ensure_ascii=False))
+assert all((ROOT/'public'/p['image']).exists() for p in result)
+(ROOT/'public/products.json').write_text(json.dumps(result,ensure_ascii=False))
 print('Products:',len(result),'variants:',sum(len(p['variants']) for p in result),'children:',sum(p['children'] for p in result),'source cards:',len(rows))
