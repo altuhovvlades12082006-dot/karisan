@@ -5,11 +5,14 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const money=n=>n===null?'Ціну не вказано':new Intl.NumberFormat('uk-UA',{style:'currency',currency:'UAH',maximumFractionDigits:2}).format(n);
 for(const [value,label]of Object.entries(categories)){for(const select of[$('#filter'),form.elements.category])select.add(new Option(label,value));}
 async function api(path,options={}){const r=await fetch('/api/admin/'+path,{...options,headers:{...options.headers},cache:'no-store'});let data;try{data=await r.json();}catch{throw Error('Сервер тимчасово недоступний. Спробуйте ще раз.');}if(!r.ok)throw Error(data.error||'Не вдалося виконати дію');return data;}
-async function start(){try{const s=await api('session');$('#signout').hidden=!s.signedIn;
-  if(s.admin){await api('session',{method:'POST'});$('#gate').hidden=true;$('#workspace').hidden=false;await refresh();}
-  else{$('#signin').hidden=s.signedIn;$('#claim').hidden=!s.invited;$('#gate-message').textContent=s.invited?'Ваш акаунт запрошений. Активуйте доступ, щоб керувати каталогом.':s.signedIn?'Цей акаунт не має доступу до управління. Увійдіть з акаунта, який отримав запрошення.':'Увійдіть із запрошеного акаунта ChatGPT. Покупцям вхід не потрібен.';}
+async function start(){try{const s=await api('session');$('#signout').hidden=!s.admin;
+  $('#gate').hidden=s.admin;$('#workspace').hidden=!s.admin;
+  if(s.admin){$('#login-form').reset();await refresh();}
+  else{$('#login-form').hidden=!s.configured;$('#gate-message').textContent=s.configured?'Введіть пошту та пароль для керування магазином.':'Вхід ще налаштовується. Спробуйте пізніше.';}
 }catch(e){$('#gate-message').textContent=e.message;}}
-$('#claim').onclick=async()=>{const b=$('#claim');b.disabled=true;try{await api('session',{method:'POST'});await start();}catch(e){$('#gate-message').textContent=e.message;}finally{b.disabled=false;}};
+$('#login-form').onsubmit=async e=>{e.preventDefault();const b=$('#login-submit');b.disabled=true;$('#login-error').textContent='';try{await api('session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e.target.elements.email.value,password:e.target.elements.password.value})});await start();}catch(e){$('#login-error').textContent=e.message;}finally{b.disabled=false;}};
+$('#show-password').onclick=()=>{const input=$('#login-password'),visible=input.type==='password';input.type=visible?'text':'password';$('#show-password').textContent=visible?'Сховати':'Показати';$('#show-password').setAttribute('aria-pressed',String(visible));$('#show-password').setAttribute('aria-label',visible?'Сховати пароль':'Показати пароль');};
+$('#signout').onclick=async()=>{if(uploading||saving)return;if(dirty&&!confirm('Вийти без збереження змін?'))return;try{await api('session',{method:'DELETE'});dirty=false;current=null;rows=[];$('#list').replaceChildren();$('#editor').close();await start();}catch(e){$('#status').textContent=e.message;}};
 async function refresh(){rows=await api('products');render();}
 function render(){const q=$('#search').value.trim().toLowerCase(),cat=$('#filter').value,archive=$('#archived').checked;const filtered=rows.filter(r=>r.archived===archive&&(!cat||r.product.category===cat)&&(!q||[r.product.uk,...r.product.variants.map(v=>v.sku)].join(' ').toLowerCase().includes(q)));
 $('#count').textContent=`${rows.filter(r=>!r.archived).length} активних · ${rows.filter(r=>r.archived).length} в архіві`;

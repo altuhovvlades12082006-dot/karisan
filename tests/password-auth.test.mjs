@@ -1,0 +1,6 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {passwordHash,verifyPassword,randomToken,sessionCookie,readToken,digest} from '../lib/password-auth.mjs';
+test('salted hash verifies only the right password',async()=>{const p='local-test-password-only';const hash=await passwordHash(p);assert.notEqual(hash,await passwordHash(p));assert.ok(await verifyPassword(p,hash));assert.equal(await verifyPassword('wrong',hash),false);assert.equal(await verifyPassword(p,'broken'),false);assert.equal(await verifyPassword(null,hash),false);});
+test('production session cookie is host-only, secure and inaccessible to scripts',()=>{const token=randomToken();const cookie=sessionCookie('https://example.test/admin',token);assert.match(cookie,/^__Host-karisan_admin=/);for(const flag of ['Secure','HttpOnly','SameSite=Strict','Path=/'])assert.ok(cookie.includes(flag));assert.ok(!cookie.includes('Domain='));assert.equal(readToken(new Request('https://example.test',{headers:{cookie}})),token);});
+test('tokens are random; database receives only a digest',async()=>{const token=randomToken();assert.match(token,/^[a-f0-9]{64}$/);assert.notEqual(token,randomToken());assert.notEqual(await digest(token),token);});

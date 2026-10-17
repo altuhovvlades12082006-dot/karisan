@@ -1,13 +1,12 @@
 import {env} from 'cloudflare:workers';
 import seed from '../data/catalog-seed.json';
+import {adminSession} from './admin-session';
 export function db(){if(!env.DB)throw Error('Database unavailable');return env.DB;}
 export function json(data:unknown,status=200){return Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});}
-export function identity(r:Request){return r.headers.get('oai-authenticated-user-id');}
-export async function isAdmin(r:Request){const id=identity(r);return !!id&&!!await db().prepare('SELECT user_id FROM admins WHERE user_id = ?').bind(id).first();}
+export const isAdmin=adminSession;
 export function sameOrigin(r:Request){return r.headers.get('origin')===new URL(r.url).origin;}
 export async function guard(r:Request,write=false){
-  if(!identity(r))return json({error:'Потрібен вхід'},401);
-  if(!await isAdmin(r))return json({error:'Немає доступу'},403);
+  if(!await isAdmin(r))return json({error:'Потрібен вхід'},401);
   if(write&&!sameOrigin(r))return json({error:'Неприпустиме джерело запиту'},403);
   return null;
 }

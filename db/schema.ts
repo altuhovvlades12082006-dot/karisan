@@ -10,3 +10,9 @@ export const admins = sqliteTable('admins', {
   createdAt: text('created_at').notNull(),
 });
 export const settings = sqliteTable('settings', {key:text('key').primaryKey(),value:text('value').notNull()});
+export const adminSessions = sqliteTable('admin_sessions', {
+  tokenHash:text('token_hash').primaryKey(),expiresAt:integer('expires_at').notNull(),credentialVersion:text('credential_version').notNull(),
+});
+export const loginAttempts = sqliteTable('login_attempts', {
+  key:text('key').primaryKey(),count:integer('count').notNull(),expiresAt:integer('expires_at').notNull(),
+});
