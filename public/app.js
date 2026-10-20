@@ -1,4 +1,4 @@
-import { StoryPlayer } from './story-player.js?v=smooth-20261020';
+import { StoryPlayer } from './story-player.js?v=stream-20261008';
 'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const isProductPage=/\/product(?:\.html)?\/?$/.test(location.pathname);
