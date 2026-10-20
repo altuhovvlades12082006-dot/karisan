@@ -1,4 +1,4 @@
-import { StoryPlayer } from './story-player.js?v=scroll-lock-20261020';
+import { StoryPlayer } from './story-player.js?v=native-restored-20261020';
 import {timeFromProgress,progressFromTime} from './story-motion.js';
 import {animateSelection} from './selection-motion.js';
 'use strict';

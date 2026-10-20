@@ -1,0 +1,4 @@
+/* Quiet hero: the supplied poster covers loading, with no technical badges. */
+.story .quality,.story .scene-marker,.story #video-loading{display:none!important}
+.story .chapters button{font-size:0;min-height:32px}
+.story-copy{will-change:auto}
