@@ -11,5 +11,6 @@ function flush(){clearTimeout(timer);timer=null;if(!queue.length)return;const ev
   fetch('/api/events',{method:'POST',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{});
 }
 export function track(type,productId){if(disabled)return;try{const s=session();queue.push({id:crypto.randomUUID(),session:s.id,type,productId,source:s.source,device:matchMedia('(max-width: 700px)').matches?'mobile':matchMedia('(max-width: 1100px)').matches?'tablet':'desktop'});if(queue.length>=10)flush();else if(!timer)timer=setTimeout(flush,700);}catch{}}
+export function attribution(){if(disabled)return {};try{const s=session();return {session:s.id,source:s.source};}catch{return {};}}
 track('page_view');addEventListener('hashchange',()=>track('page_view'));
 addEventListener('pagehide',flush);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush();});

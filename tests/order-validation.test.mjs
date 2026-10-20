@@ -1,0 +1,6 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {validateCheckout,quoteItems} from '../lib/order-validation.mjs';
+const body={key:'a'.repeat(64),consent:true,customer:{name:'Локальний тест',phone:'0670000001'},delivery:{carrier:'nova',city:'Тест',branch:'Відділення 1'},payment:'cod',items:[{product:'p',variant:'v',qty:1,pillow:'50х70',expectedAmount:12345}]};
+const row={product:{uk:'Тест',variants:[{id:'v',uk:'Розмір',sku:'QA',price:123.45,stock:2,pillowSizes:['50х70','70х70']} ]},archived:0};
+test('checkout normalizes contact data, forbids unsupported payments and requires consent',()=>{assert.equal(validateCheckout(body).customer.phone,'+380670000001');for(const update of[{payment:'card'},{consent:false},{customer:{name:'A',phone:'0000000000'}},{items:[]}])assert.throws(()=>validateCheckout({...body,...update}));});
+test('server price, aggregate quantity and pillow size are authoritative',()=>{const map=new Map([['p',row]]);assert.equal(quoteItems(body.items,map).amount,12345);for(const items of[[{...body.items[0],expectedAmount:1}],[{...body.items[0],pillow:'10x10'}],[body.items[0],{...body.items[0],qty:2}]])assert.throws(()=>quoteItems(items,map));assert.throws(()=>quoteItems(body.items,new Map([['p',{...row,archived:1}]])));});
