@@ -19,7 +19,7 @@ export const loginAttempts = sqliteTable('login_attempts', {
 export const analyticsEvents=sqliteTable('analytics_events',{
   id:text('id').primaryKey(),session:text('session').notNull(),type:text('type').notNull(),
   day:text('day').notNull(),createdAt:integer('created_at').notNull(),productId:text('product_id'),
-  device:text('device').notNull(),source:text('source').notNull(),
+  device:text('device').notNull(),source:text('source').notNull(),country:text('country').notNull().default('ZZ'),
 },table=>[index('analytics_day_type').on(table.day,table.type)]);
 export const salesLedger=sqliteTable('sales_ledger',{
   id:text('id').primaryKey(),reference:text('reference').notNull().unique(),

@@ -5,8 +5,8 @@ export const metadata: Metadata = {
   title: "Kari-San — постільна білизна",
   description: "Домашній текстиль Kari-San",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: "/karisan-mark.svg",
+    shortcut: "/karisan-mark.svg",
   },
 };
 

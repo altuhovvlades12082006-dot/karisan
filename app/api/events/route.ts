@@ -1,6 +1,7 @@
 import {db,json,sameOrigin,boundedBody,isAdmin} from '../../../lib/store';
 import {validateEvent,shopDay,shiftDay} from '../../../lib/statistics.mjs';
 import {digest} from '../../../lib/password-auth.mjs';
+import {requestCountry} from '../../../lib/request-country';
 export async function POST(r:Request){
   if(!sameOrigin(r))return json({error:'Forbidden'},403);
   if(r.headers.get('dnt')==='1'||/bot|crawler|spider|headless|preview/i.test(r.headers.get('user-agent')||'')||await isAdmin(r))return new Response(null,{status:204});
@@ -12,7 +13,7 @@ export async function POST(r:Request){
   if(!limit||limit.count>120)return json({error:'Too many events'},429);
   // No IP addresses, names, contact details, URLs or search terms are stored.
   await database.batch([
-    ...events.map(e=>database.prepare('INSERT OR IGNORE INTO analytics_events (id,session,type,day,created_at,product_id,device,source) VALUES (?,?,?,?,?,?,?,?)').bind(e.id,e.session,e.type,day,now,e.productId,e.device,e.source)),
+    ...events.map(e=>database.prepare('INSERT OR IGNORE INTO analytics_events (id,session,type,day,created_at,product_id,device,source,country) VALUES (?,?,?,?,?,?,?,?,?)').bind(e.id,e.session,e.type,day,now,e.productId,e.device,e.source,requestCountry())),
     database.prepare("INSERT OR IGNORE INTO settings (key,value) VALUES ('analytics-started',?)").bind(new Date(now).toISOString()),
     database.prepare('DELETE FROM analytics_events WHERE id IN (SELECT id FROM analytics_events WHERE day<? LIMIT 200)').bind(shiftDay(day,-89)),
     database.prepare('DELETE FROM login_attempts WHERE expires_at<?').bind(now),

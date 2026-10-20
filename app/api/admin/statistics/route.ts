@@ -15,9 +15,10 @@ export async function GET(r:Request){
     database.prepare('SELECT COUNT(*) AS receipts,COALESCE(SUM(refund),0) AS amount FROM sales_ledger WHERE voided=0 AND refund>0 AND refund_day BETWEEN ? AND ?').bind(start,end),
     database.prepare("SELECT value FROM settings WHERE key='analytics-started'"),
     database.prepare('SELECT data FROM products WHERE archived=0'),
+    database.prepare('SELECT country,COUNT(DISTINCT session) AS sessions FROM analytics_events WHERE day BETWEEN ? AND ? GROUP BY country ORDER BY sessions DESC,country LIMIT 100').bind(start,end),
   ]);
   const row=(n:number)=>results[n].results[0] as any;
   const productMap=new Map(results[9].results.map((p:any)=>{const data=JSON.parse(p.data);return [data.id,data];}));
   const inventory=Array.from(productMap.values()).map((p:any)=>({id:p.id,name:p.uk,stock:p.variants.reduce((n:number,v:any)=>n+v.stock,0)}));
-  return json({range,timezone:'Europe/Kyiv',startedAt:row(8)?.value||null,generatedAt:new Date().toISOString(),traffic:{sessions:row(1)?.sessions||0,events:results[0].results,daily:results[2].results,devices:results[4].results,sources:results[5].results,top:results[3].results.map((p:any)=>({...p,name:productMap.get(p.id)?.uk||p.id}))},sales:{...row(6),refundReceipts:row(7)?.receipts||0,refunds:row(7)?.amount||0,net:(row(6)?.gross||0)-(row(7)?.amount||0),source:'manual',checkoutConnected:false},inventory:{total:inventory.length,outOfStock:inventory.filter(p=>p.stock===0),lowStock:inventory.filter(p=>p.stock>0&&p.stock<=3)}});
+  return json({range,timezone:'Europe/Kyiv',startedAt:row(8)?.value||null,generatedAt:new Date().toISOString(),traffic:{sessions:row(1)?.sessions||0,events:results[0].results,daily:results[2].results,devices:results[4].results,sources:results[5].results,countries:results[10].results,top:results[3].results.map((p:any)=>({...p,name:productMap.get(p.id)?.uk||p.id}))},sales:{...row(6),refundReceipts:row(7)?.receipts||0,refunds:row(7)?.amount||0,net:(row(6)?.gross||0)-(row(7)?.amount||0),source:'manual',checkoutConnected:false},inventory:{total:inventory.length,outOfStock:inventory.filter(p=>p.stock===0),lowStock:inventory.filter(p=>p.stock>0&&p.stock<=3)}});
 }
