@@ -1,0 +1,16 @@
+/* Selection feedback, not hover decoration. Never change layout or delay navigation. */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:selection-out .12s ease both}
+::view-transition-new(root){animation:selection-in .2s ease both}
+@keyframes selection-out{to{opacity:0}}
+@keyframes selection-in{from{opacity:.35}to{opacity:1}}
+.collection-tile,#fabric-options a,.variant{transition:background-color .2s,border-color .2s,box-shadow .2s,transform .2s}
+.collection-tile:active,#fabric-options a:active{transform:scale(.98)}
+.variant.selected{animation:variant-select .24s ease-out}
+@keyframes variant-select{from{box-shadow:inset 0 0 0 2px #a489b155}to{box-shadow:inset 0 0 0 0 #a489b100}}
+.product-page #product-dialog{animation:detail-reveal .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes detail-reveal{from{opacity:.35;transform:translateY(7px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+ ::view-transition-old(root),::view-transition-new(root),.variant.selected,.product-page #product-dialog{animation:none!important}
+ .collection-tile,#fabric-options a,.variant{transition:none!important}
+}
