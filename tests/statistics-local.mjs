@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';import {shopDay,shiftDay} from '../lib/statistics.mjs';
+const base='http://127.0.0.1:5173',today=shopDay();
+const login=await fetch(base+'/api/admin/session',{method:'POST',headers:{origin:base,'content-type':'application/json'},body:JSON.stringify({email:'test@sites.test',password:'local-test-password-only'})});assert.equal(login.status,200,await login.clone().text());
+const cookie=login.headers.getSetCookie()[0].split(';')[0];
+const get=path=>fetch(base+'/api/admin/'+path,{headers:{cookie}}).then(async r=>{assert.equal(r.status,200,await r.clone().text());return r.json();});
+const query='?start='+today+'&end='+today;
+const before=await get('statistics'+query);
+const session=crypto.randomUUID();const events=['page_view','product_view','add_to_cart','checkout_start'].map(type=>({id:crypto.randomUUID(),session,type,productId:'b4754ec606',device:'mobile',source:'search'}));
+const send=(data,headers={})=>fetch(base+'/api/events',{method:'POST',headers:{origin:base,'content-type':'application/json','user-agent':'KariSanLocalQA',...headers},body:JSON.stringify({events:data})});
+assert.equal((await send(events)).status,204);assert.equal((await send(events)).status,204,'replay is deduplicated');
+assert.equal((await send([{...events[0],id:crypto.randomUUID()}],{cookie})).status,204,'admin events ignored');
+assert.equal((await send([{...events[0],id:crypto.randomUUID()}],{dnt:'1'})).status,204);
+assert.equal((await send([{...events[0],type:'purchase'}])).status,400);
+assert.equal((await send(events,{origin:'https://other.example'})).status,403);
+const after=await get('statistics'+query);assert.equal(after.traffic.sessions,before.traffic.sessions+1);for(const e of events){const count=d=>d.traffic.events.find(x=>x.type===e.type)?.events||0;assert.equal(count(after)-count(before),1);}
+assert.equal((await fetch(base+'/api/admin/statistics')).status,401);
+const post=record=>fetch(base+'/api/admin/sales',{method:'POST',headers:{cookie,origin:base,'content-type':'application/json'},body:JSON.stringify(record)});
+const sale={id:crypto.randomUUID(),version:0,reference:'LOCAL-QA-'+crypto.randomUUID(),day:shiftDay(today,-1),amount:100050,quantity:2,refund:12525,refundDay:today,voided:false};
+let r=await post(sale);assert.equal(r.status,200,await r.clone().text());
+let stats=await get('statistics'+query);assert.equal(stats.sales.gross,after.sales.gross,'sale outside period excluded');assert.equal(stats.sales.refunds,after.sales.refunds+12525,'refund uses refund date');assert.equal(stats.sales.net,after.sales.net-12525);
+assert.equal((await post(sale)).status,409,'duplicate receipt rejected');
+r=await post({...sale,version:1,refund:sale.amount+1});assert.equal(r.status,400);
+r=await post({...sale,version:1,voided:true});assert.equal(r.status,200);
+stats=await get('statistics'+query);assert.equal(stats.sales.refunds,after.sales.refunds,'voided records excluded');
+await fetch(base+'/api/admin/session',{method:'DELETE',headers:{cookie,origin:base}});
+console.log('PASS: unique sessions, event replay, admin/DNT exclusion, private reporting, refund-period accounting, integer money, voiding and conflicts');

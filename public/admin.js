@@ -1,3 +1,4 @@
+import {mountStatistics,clearStatistics} from './admin-statistics.js';
 const $=s=>document.querySelector(s), form=$('#product-form');
 const categories={gold:'Бязь Голд люкс',stripe:'Страйп сатин',satin:'Сатин',washed:'Варена бавовна',flannel:'Байка','linen-new':'Інша постільна білизна',towels:'Рушники',duvets:'Ковдри',protectors:'Наматрацники',covers:'Покривала',pillows:'Подушки'};
 let rows=[],current=null,dirty=false,uploading=false,saving=false;
@@ -7,12 +8,12 @@ for(const [value,label]of Object.entries(categories)){for(const select of[$('#fi
 async function api(path,options={}){const r=await fetch('/api/admin/'+path,{...options,headers:{...options.headers},cache:'no-store'});let data;try{data=await r.json();}catch{throw Error('Сервер тимчасово недоступний. Спробуйте ще раз.');}if(!r.ok)throw Error(data.error||'Не вдалося виконати дію');return data;}
 async function start(){try{const s=await api('session');$('#signout').hidden=!s.admin;
   $('#gate').hidden=s.admin;$('#workspace').hidden=!s.admin;
-  if(s.admin){$('#login-form').reset();await refresh();}
+  if(s.admin){$('#login-form').reset();await refresh();await mountStatistics();}
   else{$('#login-form').hidden=!s.configured;$('#gate-message').textContent=s.configured?'Введіть пошту та пароль для керування магазином.':'Вхід ще налаштовується. Спробуйте пізніше.';}
 }catch(e){$('#gate-message').textContent=e.message;}}
 $('#login-form').onsubmit=async e=>{e.preventDefault();const b=$('#login-submit');b.disabled=true;$('#login-error').textContent='';try{await api('session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e.target.elements.email.value,password:e.target.elements.password.value})});await start();}catch(e){$('#login-error').textContent=e.message;}finally{b.disabled=false;}};
 $('#show-password').onclick=()=>{const input=$('#login-password'),visible=input.type==='password';input.type=visible?'text':'password';$('#show-password').textContent=visible?'Сховати':'Показати';$('#show-password').setAttribute('aria-pressed',String(visible));$('#show-password').setAttribute('aria-label',visible?'Сховати пароль':'Показати пароль');};
-$('#signout').onclick=async()=>{if(uploading||saving)return;if(dirty&&!confirm('Вийти без збереження змін?'))return;try{await api('session',{method:'DELETE'});dirty=false;current=null;rows=[];$('#list').replaceChildren();$('#editor').close();await start();}catch(e){$('#status').textContent=e.message;}};
+$('#signout').onclick=async()=>{if(uploading||saving)return;if(dirty&&!confirm('Вийти без збереження змін?'))return;try{await api('session',{method:'DELETE'});clearStatistics();dirty=false;current=null;rows=[];$('#list').replaceChildren();$('#editor').close();await start();}catch(e){$('#status').textContent=e.message;}};
 async function refresh(){rows=await api('products');render();}
 function render(){const q=$('#search').value.trim().toLowerCase(),cat=$('#filter').value,archive=$('#archived').checked;const filtered=rows.filter(r=>r.archived===archive&&(!cat||r.product.category===cat)&&(!q||[r.product.uk,...r.product.variants.map(v=>v.sku)].join(' ').toLowerCase().includes(q)));
 $('#count').textContent=`${rows.filter(r=>!r.archived).length} активних · ${rows.filter(r=>r.archived).length} в архіві`;

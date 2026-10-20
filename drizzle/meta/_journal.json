@@ -15,6 +15,13 @@
       "when": 1792255902510,
       "tag": "0001_blushing_frightful_four",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792514765833,
+      "tag": "0002_dazzling_tombstone",
+      "breakpoints": true
     }
   ]
 }
