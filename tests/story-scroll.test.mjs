@@ -20,7 +20,12 @@ test('ordinary scroll plays continuous video rather than seeking to the target',
   let current=1,seeks=0,plays=0;
   const v={paused:true,playbackRate:1,get currentTime(){return current},set currentTime(t){seeks++;current=t},pause(){this.paused=true},play(){plays++;this.paused=false;return Promise.resolve()}};
   const p=Object.assign(Object.create(StoryPlayer.prototype),{ready:true,videos:[v],active:0,direction:1,target:20,canvas:{width:1920,height:1080,getBoundingClientRect(){return {bottom:720}}},ctx:{fillRect(){},drawImage(){}},onFrame(){},lastDraw:-1});
-  p.tick();await Promise.resolve();assert.equal(plays,1);assert.equal(seeks,0);assert.equal(v.playbackRate,2);
+  p.tick();await Promise.resolve();assert.equal(plays,1);assert.equal(seeks,0);assert.equal(v.playbackRate,1);
+  for(const direction of [1,-1])for(const gap of [.06,.2,1,5,20]){
+   p.direction=direction;current=direction>0?1:24;p.target=1+direction*gap;
+   v.playbackRate=2;p.tick();assert.equal(v.playbackRate,1,'speed must not depend on direction or scroll distance');
+  }
+  p.direction=1;current=1;
   p.target=1;p.tick();assert.equal(v.paused,true);assert.equal(seeks,0);
   globalThis.document.hidden=true;p.target=10;p.tick();assert.equal(v.paused,true);
  }finally{globalThis.requestAnimationFrame=old.raf;globalThis.document=old.document}

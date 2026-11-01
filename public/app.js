@@ -1,6 +1,7 @@
-import { StoryPlayer } from './story-player.js?v=native-restored-20261020';
+import { StoryPlayer } from './story-player.js?v=constant-speed-20261024';
 import {timeFromProgress,progressFromTime} from './story-motion.js';
 import {animateSelection} from './selection-motion.js';
+const adminLink=document.createElement('a');adminLink.href='/admin';adminLink.textContent='Для адміністратора';document.querySelector('footer#contacts')?.append(adminLink);
 'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const isProductPage=/\/product(?:\.html)?\/?$/.test(location.pathname);
