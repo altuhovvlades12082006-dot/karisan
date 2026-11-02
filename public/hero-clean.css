@@ -2,3 +2,6 @@
 .story .quality,.story .scene-marker,.story #video-loading{display:none!important}
 .story .chapters button{font-size:0;min-height:32px}
 .story-copy{will-change:auto}
+/* Keep the supplied still visible until a decoded frame is actually drawn. */
+.story .story-canvas:not([data-drawn="true"]){opacity:0}
+.story:has(.story-canvas:not([data-drawn="true"])) .hero-poster{opacity:1;filter:none;transform:none}
