@@ -4,7 +4,7 @@ export function mountReadiness(){
   clearReadiness();const current=generation;
   const box=document.createElement('details');box.id='launch-readiness';box.className='launch-readiness';
   const summary=document.createElement('summary');summary.textContent='Готовність до запуску · перевіряємо…';
-  const description=document.createElement('p');description.textContent='Сервер уже розміщений на поточній платформі. Окремий VPS для цієї версії не потрібний. Зовнішні сервіси потребують кабінетів та підтвердження власниці.';
+  const description=document.createElement('p');description.textContent='Ця перевірка стосується поточного середовища. Вона не підтверджує публікацію на домені. Хостинг, HTTPS і зовнішні сервіси потрібно перевірити перед запуском; купівля окремого VPS поки не потрібна.';
   const list=document.createElement('ul');list.setAttribute('aria-live','polite');
   const refresh=document.createElement('button');refresh.type='button';refresh.textContent='Перевірити ще раз';
   box.append(summary,description,list,refresh);document.querySelector('.admin-tabs').after(box);

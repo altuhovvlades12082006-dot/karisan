@@ -10,5 +10,9 @@ declare namespace Cloudflare {
     ADMIN_PASSWORD_HASH?: string;
     NOVA_POSHTA_API_KEY?:string;
     UKRPOSHTA_BEARER?:string;
+    LIQPAY_MODE?:string;
+    LIQPAY_API_VERSION?:string;
+    LIQPAY_PUBLIC_KEY?:string;
+    LIQPAY_PRIVATE_KEY?:string;
   }
 }

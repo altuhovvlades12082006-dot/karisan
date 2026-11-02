@@ -1,4 +1,4 @@
-// Server-only preparation. Not mounted as an HTTP route; real payments remain disabled.
+// Server-only sandbox helper. Mounted routes still forbid real payments.
 // v7 uses SHA3-256; legacy v3 uses SHA-1. Never auto-negotiate from callback input.
 import {createHash,timingSafeEqual} from 'node:crypto';
 
