@@ -1,4 +1,7 @@
-import {test} from 'node:test';
+import {test,after} from 'node:test';
+const previousCancel=globalThis.cancelAnimationFrame;
+globalThis.cancelAnimationFrame=()=>{};
+after(()=>{globalThis.cancelAnimationFrame=previousCancel});
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';

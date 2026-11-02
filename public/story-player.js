@@ -24,12 +24,13 @@ export class StoryPlayer {
   }).finally(()=>{this.loading[i]=null});
   return this.loading[i];
  }
- async start(){if(this.starting||this.dead)return;this.starting=true;this.stateTo('loading');try{await this.loadVideo(0);if(this.dead)return;this.ready=true;this.needsDraw=true;this.stateTo('ready');this.raf=requestAnimationFrame(this.tick);this.loadVideo(1).catch(()=>{/* Keep the forward video usable if background preparation fails. */})}catch(e){if(!this.dead)this.stateTo('error')}finally{this.starting=false}}
- seek(t){const target=Math.max(0,Math.min(STORY_END,t));if(target!==this.target)this.settled=false;this.target=target}
+ wake(){if(this.dead||!this.ready)return;cancelAnimationFrame(this.raf);this.tick()}
+ async start(){if(this.starting||this.dead)return;this.starting=true;this.stateTo('loading');try{await this.loadVideo(0);if(this.dead)return;this.ready=true;this.needsDraw=true;this.stateTo('ready');this.wake();this.loadVideo(1).catch(()=>{/* Keep the forward video usable if background preparation fails. */})}catch(e){if(!this.dead)this.stateTo('error')}finally{this.starting=false}}
+ seek(t){const target=Math.max(0,Math.min(STORY_END,t));if(target!==this.target)this.settled=false;this.target=target;if(this.ready&&!this.switching)this.wake()}
  alignVideo(time){
   this.switching=true;const v=this.videos[this.active];v.pause();
   const desired=this.direction>0?time:SOURCE_END-time;
-  v.onseeked=()=>{clearTimeout(this.seekTimer);this.switching=false;v.onseeked=null;this.needsDraw=true};
+  v.onseeked=()=>{clearTimeout(this.seekTimer);this.switching=false;v.onseeked=null;this.needsDraw=true;this.wake()};
   if(Math.abs(v.currentTime-desired)<.008){this.switching=false;v.onseeked=null;this.needsDraw=true}
   else{this.seekTimer=setTimeout(()=>{if(!this.dead&&this.switching){this.switching=false;this.stateTo('error')}},15000);v.currentTime=Math.max(0,Math.min(v.duration-.018,desired))}
  }

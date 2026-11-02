@@ -1,4 +1,7 @@
-import {test} from 'node:test';
+import {test,after} from 'node:test';
+const previousCancel=globalThis.cancelAnimationFrame;
+globalThis.cancelAnimationFrame=()=>{};
+after(()=>{globalThis.cancelAnimationFrame=previousCancel});
 import assert from 'node:assert/strict';
 import {StoryPlayer} from '../public/story-player.js';
 
@@ -8,6 +11,10 @@ class Video extends EventTarget {
  load(){this.loads++}
 }
 function player(){return Object.assign(Object.create(StoryPlayer.prototype),{videos:[new Video(),new Video()],loaded:[false,false],abort:new AbortController()})}
+test('decoded data can wake drawing without waiting for the first browser animation callback',()=>{
+ let ticks=0;const p=Object.assign(Object.create(StoryPlayer.prototype),{ready:true,tick(){ticks++}});
+ p.wake();assert.equal(ticks,1);p.dead=true;p.wake();assert.equal(ticks,1);
+});
 test('concurrent forward/reverse preparation shares requests and accepts decoded cached data',async()=>{
  const p=player();const first=p.loadVideo(1),second=p.loadVideo(1);
  assert.equal(p.videos[1].loads,1);
@@ -39,6 +46,6 @@ test('overshoot settles without reverse chatter, but a new scroll target can rev
  try{let switches=0;const v={currentTime:1.1,paused:false,readyState:4,pause(){this.paused=true}};
   const p=Object.assign(Object.create(StoryPlayer.prototype),{ready:true,videos:[v],active:0,direction:1,target:1,playingTarget:1,lastDraw:1.1,canvas:{getBoundingClientRect(){return{bottom:700}}},switchTo(){switches++}});
   p.tick();assert.equal(v.paused,true);assert.equal(p.settled,true);assert.equal(switches,0);
-  p.seek(.2);p.tick();assert.equal(switches,1);
+  p.seek(.2);assert.equal(switches,1);
  }finally{globalThis.requestAnimationFrame=originalRaf;globalThis.document=originalDocument}
 });
