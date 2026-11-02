@@ -1,13 +1,17 @@
 import {db,guard,json,boundedBody,initializeCatalog} from '../../../../lib/store';
 import {validateProduct} from '../../../../lib/catalog-validation.mjs';
 import {checked} from '../../../../lib/crm';
+import {env} from 'cloudflare:workers';
+import {usesSupabase,supabaseProducts,saveSupabaseProduct,CatalogConflict} from '../../../../lib/supabase-catalog.mjs';
 export async function GET(r:Request){const denied=await guard(r);if(denied)return denied;
+  if(usesSupabase(env)){try{return json(await supabaseProducts(env,true));}catch{return json({error:'Supabase тимчасово недоступна'},503);}}
   const {results}=await db().prepare('SELECT data,version,archived FROM products ORDER BY updated_at DESC,id').all<{data:string,version:number,archived:number}>();return json(results.map(row=>({product:JSON.parse(row.data),version:row.version,archived:!!row.archived})));
 }
 export async function POST(r:Request){const denied=await guard(r,true);if(denied)return denied;
   let body:any;try{body=JSON.parse(new TextDecoder().decode(await boundedBody(r,65000)));body.product=validateProduct(body.product);
     if(!Number.isInteger(body.version)||body.version<0||typeof body.archived!=='boolean')throw Error('Перевірте версію товару');
   }catch(e){return json({error:(e as Error).message},400);}
+  if(usesSupabase(env)){try{return json(await saveSupabaseProduct(env,body));}catch(e){return json({error:e instanceof CatalogConflict?e.message:'Не вдалося зберегти в Supabase'},e instanceof CatalogConflict?409:503);}}
   await initializeCatalog();const p=body.product,database=db();
   const previous=await database.prepare('SELECT data,version FROM products WHERE id=?').bind(p.id).first<{data:string,version:number}>();
   if(body.version>0&&previous?.version!==body.version)return json({error:'Залишки вже змінилися. Оновіть список перед редагуванням.'},409);

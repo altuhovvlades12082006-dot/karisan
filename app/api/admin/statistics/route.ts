@@ -1,8 +1,11 @@
 import {db,guard,json} from '../../../../lib/store';
 import {dateRange} from '../../../../lib/statistics.mjs';
 import {acceptingOrders} from '../../../../lib/crm';
+import {env} from 'cloudflare:workers';
+import {usesSupabase} from '../../../../lib/supabase-catalog.mjs';
 export async function GET(r:Request){
   const denied=await guard(r);if(denied)return denied;
+  if(usesSupabase(env))return json({error:'Каталог працює у Supabase. Статистика продажів і CRM ще переносяться; дані D1 не показуються як продажі Supabase.'},503);
   let range;try{range=dateRange(new URL(r.url).searchParams);}catch(e){return json({error:(e as Error).message},400);}
   const {start,end}=range,database=db();
   const results=await database.batch([

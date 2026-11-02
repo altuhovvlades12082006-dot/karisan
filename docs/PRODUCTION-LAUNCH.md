@@ -1,5 +1,10 @@
 # Production launch — 2026-11-02
 
+UPDATE: the local catalogue and admin product APIs are now connected to the
+existing Supabase project. See [SUPABASE-LOCAL.md](SUPABASE-LOCAL.md) for current
+verified scope. The initial audit below is historical where it says Supabase
+credentials were absent. Full CRM/checkout/payment cutover remains incomplete.
+
 NOT READY TO LAUNCH. Preparation only; no deployment, domain, DNS, production
 database or payment configuration was changed. PR must remain draft.
 

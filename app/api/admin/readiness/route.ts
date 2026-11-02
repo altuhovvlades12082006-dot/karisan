@@ -2,10 +2,23 @@ import {env} from 'cloudflare:workers';
 import {db,guard,json} from '../../../../lib/store';
 import {credentialsReady} from '../../../../lib/admin-session';
 import {acceptingOrders} from '../../../../lib/crm';
+import {usesSupabase,supabaseProducts,supabaseClient} from '../../../../lib/supabase-catalog.mjs';
 
 export async function GET(request:Request){
   try{
     const denied=await guard(request);if(denied)return denied;
+    if(usesSupabase(env)){
+      const products=await supabaseProducts(env);let storage=false;
+      try{await supabaseClient(env)('/storage/v1/bucket/product-images');storage=true;}catch{}
+      return json({checkedAt:new Date().toISOString(),checks:[
+        {label:'Каталог Supabase',ready:true,detail:`Сайт і ця адмінка читають одну базу Supabase. Активних товарів: ${products.length}.`},
+        {label:'Вхід адміністратора',ready:credentialsReady(),detail:'Збережено захищений серверний вхід через пошту і пароль; сесії поки у D1.'},
+        {label:'Фото Supabase',ready:storage,detail:storage?'Сховище доступне.':'Перевірте сховище перед завантаженням фото.'},
+        {label:'CRM та приймання замовлень',ready:false,detail:'Вимкнено: перенесення CRM і резервування залишків до Supabase ще не завершено. Старі D1-замовлення не змішуються з новим каталогом.'},
+        {label:'Онлайн-оплата та доставка',ready:false,detail:'Провайдери не активовані. Потрібна окрема наскрізна перевірка.'},
+        {label:'Повна резервна копія',ready:false,detail:'Перед публікацією потрібна перевірена копія бази та фотографій.'}
+      ]});
+    }
     const count=await db().prepare('SELECT COUNT(*) AS total FROM products WHERE archived=0').first<{total:number}>();
     let storage=false;
     try{if(env.BUCKET){await env.BUCKET.list({limit:1});storage=true;}}catch{}

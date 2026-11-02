@@ -1,6 +1,7 @@
 import {env} from 'cloudflare:workers';
 import seed from '../data/catalog-seed.json';
 import {adminSession} from './admin-session';
+import {usesSupabase,supabaseProducts} from './supabase-catalog.mjs';
 export function db(){if(!env.DB)throw Error('Database unavailable');return env.DB;}
 export function json(data:unknown,status=200){return Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});}
 export const isAdmin=adminSession;
@@ -18,6 +19,7 @@ export async function boundedBody(r:Request,limit:number){
   const all=new Uint8Array(size);let off=0;for(const c of chunks){all.set(c,off);off+=c.length;}return all;
 }
 export async function initializeCatalog(){
+  if(usesSupabase(env))return;
   const database=db();
   if(await database.prepare("SELECT key FROM settings WHERE key='catalog-seeded'").first())return;
   const now=new Date().toISOString();
@@ -27,6 +29,7 @@ export async function initializeCatalog(){
   ]);
 }
 export async function catalog(){
+  if(usesSupabase(env))return supabaseProducts(env);
   if(!await db().prepare("SELECT key FROM settings WHERE key='catalog-seeded'").first())return seed;
   const {results}=await db().prepare('SELECT data FROM products WHERE archived=0 ORDER BY rowid').all<{data:string}>();return results.map(p=>JSON.parse(p.data));
 }

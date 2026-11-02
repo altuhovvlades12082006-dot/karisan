@@ -2,7 +2,8 @@
 
 > Historical static-site notes below predate the current root Worker and D1 CRM.
 > Current launch audit and explicit blockers: [PRODUCTION-LAUNCH.md](../docs/PRODUCTION-LAUNCH.md).
-> Supabase and LiqPay are not connected. `liqpay.mjs` is an unmounted sandbox helper,
+> Local catalogue/admin product APIs now share Supabase; see [SUPABASE-LOCAL.md](../docs/SUPABASE-LOCAL.md).
+> CRM/checkout are not migrated. `liqpay.mjs` is an unmounted sandbox helper,
 > not a live payment route. Do not activate checkout from this README alone.
 Current public site remains static. The checkout is a local review form, not an order submission. Personal information is held only in page memory. Card payment is visibly unavailable. No card details are collected.
 
