@@ -13,10 +13,16 @@ test('both video files remain byte-for-byte identical',()=>{
  for(const [direction,hash] of Object.entries(expected))assert.equal(createHash('sha256').update(readFileSync(new URL('../public/assets/story-'+direction+'-1080.mp4',import.meta.url))).digest('hex'),hash);
 });
 test('all original categories remain reachable but the repeated towel lift is excluded',()=>{
- assert.equal(timeFromProgress(1),18.2);assert.equal(SOURCE_END,25);
- assert.ok(STORY_END<18.45);
- for(const t of [0,.9,4.65,7.65,11.1,14.65,17.2,STORY_END])assert.ok(Math.abs(timeFromProgress(progressFromTime(t))-t)<1e-10);
+ assert.equal(timeFromProgress(1),21.5);assert.equal(SOURCE_END,25);
+ assert.ok(STORY_END>=21&&STORY_END<22);
+ for(const t of [0,.9,4.65,7.65,11.1,14.65,18.45,19,20,21,STORY_END])assert.ok(Math.abs(timeFromProgress(progressFromTime(t))-t)<1e-10);
  const p=Object.assign(Object.create(StoryPlayer.prototype),{target:0});p.seek(25);assert.equal(p.target,STORY_END);
+});
+test('pillows keep their original source chapter, not an early replacement label',()=>{
+ const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+ assert.match(app,/time:18\.45,cat:'pillows'/);
+ assert.doesNotMatch(app,/scenes\[6\]\.time\s*=/);
+ assert.ok(timeFromProgress(progressFromTime(20))>18.45);
 });
 test('ordinary scroll plays continuous video rather than seeking to the target',async()=>{
  const old={raf:globalThis.requestAnimationFrame,document:globalThis.document};

@@ -1,5 +1,6 @@
-// Preserve the original files; stop before the second towel lift begins.
-export const STORY_END = 18.2;
+// Source-frame audit: pillows lift at 18.5–21s; repeated side towels
+// begin after 22s. Keep the completed pillows scene and its quiet landing.
+export const STORY_END = 21.5;
 // Reverse frames are encoded against the FULL original timeline, not STORY_END.
 export const SOURCE_END = 25;
 export const playbackRateForGap = gap => Math.max(.18,(1.2 + Math.min(.4, Math.max(0, Math.abs(gap) - .15) * .8)+Math.min(.8,Math.max(0,Math.abs(gap)-.9)*.7))*Math.min(1,Math.abs(gap)/.3));
