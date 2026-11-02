@@ -15,6 +15,14 @@ test('decoded data can wake drawing without waiting for the first browser animat
  let ticks=0;const p=Object.assign(Object.create(StoryPlayer.prototype),{ready:true,tick(){ticks++}});
  p.wake();assert.equal(ticks,1);p.dead=true;p.wake();assert.equal(ticks,1);
 });
+test('a first-load seek waits for the requested range and retries on download progress',()=>{
+ const v=new Video();let end=0;v.duration=25.016667;v.currentTime=0;v.pause=()=>{};
+ v.seekable={length:1,start:()=>0,end:()=>end};
+ const p=Object.assign(Object.create(StoryPlayer.prototype),{videos:[v],active:0,direction:1});
+ p.alignVideo(18);assert.equal(v.currentTime,0);assert.equal(p.switching,true);
+ end=25;v.dispatchEvent(new Event('progress'));assert.equal(v.currentTime,18);
+ v.onseeked();assert.equal(p.switching,false);assert.equal(p.needsDraw,true);
+});
 test('concurrent forward/reverse preparation shares requests and accepts decoded cached data',async()=>{
  const p=player();const first=p.loadVideo(1),second=p.loadVideo(1);
  assert.equal(p.videos[1].loads,1);
@@ -23,6 +31,16 @@ test('concurrent forward/reverse preparation shares requests and accepts decoded
  await p.loadVideo(1);assert.equal(p.videos[1].loads,1);
  const cached=player();cached.videos[0].src='existing.mp4';cached.videos[0].readyState=4;
  await cached.loadVideo(0);assert.equal(cached.videos[0].loads,0);
+});
+test('a non-seekable native preload falls back to a complete local blob without altering bytes',async()=>{
+ const previousFetch=globalThis.fetch;const bytes=new Uint8Array([1,2,3,4]);let requests=0;
+ globalThis.fetch=async()=>{requests++;return new Response(bytes)};
+ const p=player(),v=p.videos[0];let end=0;v.src='https://example.test/story.mp4';v.readyState=2;
+ v.seekable={length:1,start:()=>0,end:()=>end};
+ v.load=()=>{v.loads++;if(v.src.startsWith('blob:')){end=25;v.dispatchEvent(new Event('loadeddata'))}};
+ try{await p.loadVideo(0);assert.equal(requests,1);assert.equal(p.loaded[0],true);assert.ok(v.src.startsWith('blob:'));
+  const blob=await previousFetch(v.src);assert.deepEqual(new Uint8Array(await blob.arrayBuffer()),bytes);
+ }finally{p.blobUrls?.forEach(url=>URL.revokeObjectURL(url));globalThis.fetch=previousFetch}
 });
 test('destroy cancellation rejects pending work and clears it',async()=>{
  const p=player();const load=p.loadVideo(0);p.abort.abort();
