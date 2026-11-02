@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {StoryPlayer} from '../public/story-player.js';
-import {STORY_END,SOURCE_END,playbackRateForGap,timeFromProgress,progressFromTime} from '../public/story-motion.js';
+import {STORY_END,SOURCE_END,playbackRateForGap,smoothPlaybackRate,timeFromProgress,progressFromTime} from '../public/story-motion.js';
 
 test('both video files remain byte-for-byte identical',()=>{
  const expected={forward:'b4e0a8a2a4c86198a603e5623d7875b018940a98ee236c615b6a1ae148d4d5ab',backward:'a5554b3e705694c496d9c2fe74ae29ba65dd1a8c62f6a6eaad6fd6d012f68b08'};
@@ -28,7 +28,7 @@ test('ordinary scroll plays continuous video rather than seeking to the target',
   p.tick();await Promise.resolve();assert.equal(plays,1);assert.equal(seeks,0);assert.ok(v.playbackRate>1);
   for(const direction of [1,-1])for(const gap of [.06,.2,.8]){
    p.direction=direction;current=direction>0?1:24;p.seek(1+direction*gap);
-   v.playbackRate=2;p.tick();assert.equal(v.playbackRate,playbackRateForGap(gap));
+   v.playbackRate=2;v.paused=true;p.tick();assert.ok(Math.abs(v.playbackRate-playbackRateForGap(gap))<1e-10);
   }
   p.direction=1;current=1;
   p.target=1;p.tick();assert.equal(v.paused,true);assert.equal(seeks,0);
@@ -42,8 +42,15 @@ test('fast gestures coalesce into one alignment rather than a long playback back
   const p=Object.assign(Object.create(StoryPlayer.prototype),{ready:true,videos:[v],active:0,direction:1,target:15,canvas:{getBoundingClientRect(){return{bottom:720}}},alignVideo(t){aligned=t;this.switching=true}});
   p.tick();assert.equal(aligned,14.82);p.seek(18);p.tick();assert.equal(aligned,14.82);
   p.switching=false;p.tick();assert.equal(aligned,17.82);
-  assert.ok(playbackRateForGap(.1)>=1.2);assert.ok(playbackRateForGap(20)<=1.6);
+  assert.ok(playbackRateForGap(.5)>=1.2);assert.ok(playbackRateForGap(20)<=1.6);
  }finally{globalThis.requestAnimationFrame=old.raf;globalThis.document=old.document}
+});
+test('approach slows continuously and rate smoothing is independent of display refresh',()=>{
+ assert.ok(playbackRateForGap(.06)<playbackRateForGap(.15));
+ assert.ok(playbackRateForGap(.15)<playbackRateForGap(.3));
+ const one=smoothPlaybackRate(1.6,.4,1/30),half=smoothPlaybackRate(smoothPlaybackRate(1.6,.4,1/60),.4,1/60);
+ assert.ok(Math.abs(one-half)<1e-10);assert.ok(one>.4&&one<1.6);
+ assert.equal(smoothPlaybackRate(1.2,.3,0),1.2);
 });
 test('reverse is aligned to the current frame and waits for decoding before resuming',async()=>{
  const videos=[{pause(){}},{duration:25.016667,currentTime:0,pause(){}}];
