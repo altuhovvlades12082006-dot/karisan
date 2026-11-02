@@ -14,8 +14,8 @@
 - Local storefront `/api/catalog`, server-rendered pages, admin product GET/POST
   and new image uploads/readback now share Supabase when `CATALOG_BACKEND=supabase`.
 - The existing shared email/password login remains server-side, with sessions in
-  D1. This is NOT a migration to Supabase Auth. Admin browser UI login still needs
-  the owner's password; no password was changed or printed.
+  D1. This is NOT a migration to Supabase Auth. Owner logged in and UI price/stock
+  edits persisted after reload on an archived QA product; no password was changed.
 - Actual integration test passed: persisted create/read/update, price and stock
   visible through the local storefront, stale-version rejection, archive removed
   from storefront, Storage upload/readback, unauthenticated admin denied and order
@@ -24,12 +24,17 @@
 - PostgreSQL read-only permission query: RLS enabled on products, variants, orders
   and order items; anonymous server-catalog RPC execution denied; authenticated
   browser checkout RPC execution denied. This is not full checkout E2E/RLS testing.
-- 64 offline tests passed. Build also passed with the sales/statistics guards.
+- 69 offline tests passed. Build also passed with the sales/statistics guards.
+- Signed-in browser check: Supabase order list loaded successfully, empty without
+  fabricated records, and clearly labelled read-only. Populated order detail is
+  covered by mapping tests only, not yet a real order lifecycle/browser test.
 
 ## Important boundary
 
-This is a catalogue connection, NOT a complete CRM cutover or launch. In Supabase
-catalogue mode, CRM, manual sales and sales statistics explicitly fail closed
+This is a catalogue connection, NOT a complete CRM cutover or launch. Supabase
+order list/detail now supports protected read-only access, with an explicit UI
+notice and no launch/status/payment buttons. Customer/stock views, CRM writes,
+manual sales and sales statistics explicitly fail closed
 rather than reading/mutating a separate old D1 inventory. Checkout is disabled,
 even if the old D1 orders-enabled setting was true. The readiness panel explains
 the boundary. Existing D1 data was not deleted or migrated.

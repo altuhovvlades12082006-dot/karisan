@@ -3,8 +3,14 @@ import {acceptingOrders,orderDetail,updateOrder,Conflict} from '../../../../lib/
 import {inputText} from '../../../../lib/order-validation.mjs';
 import {env} from 'cloudflare:workers';
 import {usesSupabase} from '../../../../lib/supabase-catalog.mjs';
+import {readSupabaseOrders} from '../../../../lib/supabase-crm.mjs';
 export async function GET(r:Request){const denied=await guard(r);if(denied)return denied;
-  if(usesSupabase(env))return json({error:'Каталог підключено до Supabase. CRM ще переноситься; операції із залишками вимкнено.'},503);
+  if(usesSupabase(env)){
+    try{const result=await readSupabaseOrders(env,new URL(r.url));
+      if(!result)return json({error:'Цей розділ CRM ще переноситься. Зміни вимкнено.'},503);
+      return result.missing?json({error:'Замовлення не знайдено'},404):json(result);
+    }catch{return json({error:'Не вдалося завантажити замовлення'},503);}
+  }
   const u=new URL(r.url),view=u.searchParams.get('view')||'orders',database=db();
   if(view==='order'){const o=await orderDetail(u.searchParams.get('id')||'');return o?json(o):json({error:'Замовлення не знайдено'},404);}
   const page=Math.min(100000,Math.max(0,parseInt(u.searchParams.get('page')||'0')||0)),offset=page*100;
