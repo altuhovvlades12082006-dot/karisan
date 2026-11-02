@@ -1,6 +1,6 @@
-/* Supplied original artwork, not redrawn or enlarged. Shared with the admin. */
+/* Transparent logo shared with the storefront and admin. */
 a.brand.brand-logo{display:inline-flex;align-items:center;gap:14px;flex-shrink:0;line-height:1;letter-spacing:normal}
-a.brand.brand-logo>img{display:block;width:auto;height:76px;max-width:100%;object-fit:contain;background:#fff;border-radius:4px;flex-shrink:0}
+a.brand.brand-logo>img{display:block;width:auto;height:76px;max-width:100%;object-fit:contain;background:transparent;flex-shrink:0}
 a.brand.brand-logo>span{margin:0;font-size:11px;letter-spacing:.03em;line-height:1.5}
 footer a.brand.brand-logo>img{height:100px}
 @media(max-width:700px){a.brand.brand-logo>img{height:54px}footer a.brand.brand-logo>img{height:90px}a.brand.brand-logo{gap:10px}a.brand.brand-logo>span{max-width:100px;font-size:10px}}
