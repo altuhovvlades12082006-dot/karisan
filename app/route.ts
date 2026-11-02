@@ -1,2 +1,2 @@
-import html from '../public/index.html?raw';
-export function GET() { return new Response(html, {headers:{'Content-Type':'text/html; charset=utf-8'}}); }
+import {storefrontResponse} from '../lib/storefront-response';
+export function GET(request:Request) { return storefrontResponse(request,'home'); }

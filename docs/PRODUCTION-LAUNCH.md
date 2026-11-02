@@ -40,7 +40,7 @@ PASS means executed in this run, in the environment stated; not live readiness.
 |---|---|---|
 | Branch isolation and rollback | PASS | Separate feature branch; main untouched; backup ref |
 | Existing build | PASS | `npm run build`, existing dependencies reused |
-| Unit/regression checks | PASS | 52 tests; including carrier mocks, money, passwords, video hashes |
+| Unit/regression checks | PASS | 58 tests; including carrier mocks, money, passwords, video hashes and server SEO |
 | Current admin + photo API, local D1/R2 only | PASS | `tests/api-local.mjs`: login, protected CRUD, archive, upload/readback, CSRF, stale edit, logout, throttling |
 | Current CRM + COD, local D1 only | PASS | `tests/crm-local.mjs`: last-unit race, retries, stock reservations, cancel/restock once, manual receipts/refunds and private CRM |
 | Supabase connection/admin/storage | BLOCKED | No project URL or server credentials available; admin/API storage adaptation still required |
@@ -53,14 +53,15 @@ PASS means executed in this run, in the environment stated; not live readiness.
 | Replayed provider webhook | BLOCKED | Not executed; existing CRM replay tests concern manual receipts, not a LiqPay webhook |
 | Live payment | BLOCKED | Explicitly refused by helper; checkout still COD-only. Owner approval and sandbox E2E required |
 | Secrets heuristic | PASS | Tracked text + unique historical text blobs scanned; no recognized private-key/GitHub-token/Supabase-secret/service-role-JWT hits. Not an exhaustive secret certification |
-| Known route responses, local | PASS | `/admin` 200, `/product?id=test` 200, unknown route 404. A product's 200 does NOT prove proper missing-product handling |
-| SEO launch completeness | FAIL | Current hash categories/client-only language switching; full crawlable translated routes, canonical, hreflang, Product/Offer/Breadcrumb SSR and missing-product 404 remain incomplete |
-| robots and sitemap | BLOCKED | Existing endpoints retained; final domain and product/category URL validation required |
+| Ukrainian product/category SEO, local | PASS | Server HTML, canonical, Open Graph, Product/Offer/BreadcrumbList, `/item/:id` and `/category/:slug`, missing item/category 404; `tests/seo-local.mjs` passed on dev and built Worker |
+| Legacy product URLs, local | PASS | `/product?id=...` and `/product.html?id=...` return 308 to canonical `/item/:id`; duplicate static product template removed (recoverable from Git) |
+| SEO launch completeness | FAIL | RU/EN remain client-only language switches without independent server-translated URLs/hreflang; final domain and legal pages unverified. Do NOT advertise full multilingual SEO readiness |
+| robots and sitemap, local | PASS | Both resolve; sitemap contains canonical item/category URLs and no admin entries. Optional `PUBLIC_SITE_URL` sets the confirmed HTTPS origin consistently; real-domain verification still BLOCKED |
 | Domain / HTTPS / host compatibility | BLOCKED | Owner's provider/domain not supplied; no DNS or hosting changes made |
 | Search Console | BLOCKED | No verified domain/property access; see instructions below |
 | Legal pages | BLOCKED | Owner identity, legal address, return/contact/shipping/privacy terms needed; no invented requisites |
 | Backup and restore | BLOCKED | Code rollback prepared, but no production database/storage backup or tested restore available |
-| Mobile/browser E2E this run | BLOCKED | Not executed in this backend-only preparation; no real-device performance claim |
+| Browser layout/navigation, local | PASS | Product size selection updates price/stock; desktop and 390px layout checked; product/category return and child category navigation work; product and child category scrollWidth equals 390px viewport. Not physical-phone or full checkout E2E |
 
 **Do not recommend a public launch**: SEO FAIL and critical integration blockers
 remain. No phased COD-only launch is authorized by this PR.
@@ -97,7 +98,10 @@ remain. No phased COD-only launch is authorized by this PR.
    lookup, sandbox webhook replay, underpayment/wrong currency, out-of-stock and
    concurrent last-unit orders. Existing local D1 tests do not replace this.
 7. Complete SEO and owner-reviewed legal pages; test 360/390px and desktop.
-   Validate the final deployment artifact on the actual host without publishing.
+   Set `PUBLIC_SITE_URL` to the confirmed HTTPS origin (no path/query), without
+   changing DNS yet. Validate the final deployment artifact on the actual host
+   without publishing. When it is unset, local/preview uses the request origin;
+   this is not confirmation of the future production domain.
 8. Request owner's explicit authorization before merge, deployment or DNS change.
    Monitor errors and orders after release. Restore DB only via a reviewed data
    reconciliation plan, never by blindly rolling back sales data with code.
@@ -119,6 +123,7 @@ remain. No phased COD-only launch is authorized by this PR.
 - [Supabase API security](https://supabase.com/docs/guides/api/securing-your-api)
 - [LiqPay API v7 signature example](https://www.liqpay.ua/doc/api/information/register?tab=1)
 - [Official LiqPay Node SDK (legacy SHA-1)](https://github.com/liqpay/sdk-nodejs/blob/master/lib/liqpay.js)
+- [Google: localized versions require distinct language URLs](https://developers.google.com/search/docs/specialty/international/managing-multi-regional-sites)
 
 Provider docs and the legacy SDK differ on signature version. The helper requires
 an explicit API version; do not silently try multiple algorithms. Confirm the
