@@ -35,15 +35,24 @@ test('ordinary scroll plays continuous video rather than seeking to the target',
   globalThis.document.hidden=true;p.target=10;p.tick();assert.equal(v.paused,true);
  }finally{globalThis.requestAnimationFrame=old.raf;globalThis.document=old.document}
 });
-test('fast gestures coalesce into one alignment rather than a long playback backlog',()=>{
+test('a fast gesture never writes currentTime on the visible decoder in either direction',()=>{
  const old={raf:globalThis.requestAnimationFrame,document:globalThis.document};
  globalThis.requestAnimationFrame=()=>1;globalThis.document={hidden:false,querySelector(){return null}};
- try{const v={currentTime:1,paused:true};let aligned;
-  const p=Object.assign(Object.create(StoryPlayer.prototype),{ready:true,videos:[v],active:0,direction:1,target:15,canvas:{getBoundingClientRect(){return{bottom:720}}},alignVideo(t){aligned=t;this.switching=true}});
-  p.tick();assert.equal(aligned,14.82);p.seek(18);p.tick();assert.equal(aligned,14.82);
-  p.switching=false;p.tick();assert.equal(aligned,17.82);
-  assert.ok(playbackRateForGap(.5)>=1.2);assert.ok(playbackRateForGap(20)<=1.6);
+ try{let current=1,writes=0;const v={get currentTime(){return current},set currentTime(t){writes++;current=t},paused:true,playbackRate:1,pause(){this.paused=true},play(){this.paused=false;return Promise.resolve()}};
+  const p=Object.assign(Object.create(StoryPlayer.prototype),{ready:true,videos:[v],active:0,direction:1,target:15,lastDraw:-1,onFrame(){},ctx:{fillRect(){},drawImage(){}},canvas:{width:1920,height:1080,getBoundingClientRect(){return{bottom:720}}},alignVideo(){throw Error('visible catch-up seek')}});
+  p.tick();assert.equal(writes,0);p.seek(18);p.tick();assert.equal(writes,0);
+  p.direction=-1;current=7;p.target=1;p.playingTarget=undefined;p.settled=false;p.tick();assert.equal(writes,0);
+  assert.ok(playbackRateForGap(.5)>=1.2);assert.ok(playbackRateForGap(20)<=2.4+.000001);
  }finally{globalThis.requestAnimationFrame=old.raf;globalThis.document=old.document}
+});
+test('preparing the hidden decoder allows a settled reversal without another seek',async()=>{
+ let writes=0,current=0;
+ class HiddenVideo extends EventTarget{duration=25.016667;readyState=4;seeking=false;pause(){}get currentTime(){return current}set currentTime(t){writes++;current=t;this.seeking=true}}
+ const hidden=new HiddenVideo(),front={paused:true,pause(){}};
+ const p=Object.assign(Object.create(StoryPlayer.prototype),{videos:[front,hidden],loaded:[true,true],active:0,direction:1,time:6,loadVideo:async()=>{}});
+ p.prepareOpposite();assert.equal(current,19);assert.equal(writes,1);
+ hidden.seeking=false;hidden.dispatchEvent(new Event('seeked'));assert.equal(p.warming,false);
+ await p.switchTo(-1);assert.equal(writes,1);assert.equal(p.switching,false);assert.equal(p.active,1);
 });
 test('approach slows continuously and rate smoothing is independent of display refresh',()=>{
  assert.ok(playbackRateForGap(.06)<playbackRateForGap(.15));
