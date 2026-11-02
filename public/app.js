@@ -74,10 +74,10 @@ const video=$('#hero'),story=$('.story'),mobileQuery=matchMedia('(max-width:700p
 let reduced=motionQuery.matches,player=null,renderedStoryTime=0;
 function getProgress(){if(reduced)return 0;return Math.max(0,Math.min(1,-story.getBoundingClientRect().top/Math.max(1,story.offsetHeight-innerHeight)))}
 function update(){const p=getProgress();$('#progress').style.width=`${p*100}%`;story.dataset.phase=p<.075?'opening':p>.93?'final':'motion';story.dataset.targetTime=timeFromProgress(p).toFixed(3);if(player)player.seek(timeFromProgress(p))}
-const loadText={uk:'Завантаження відео…',ru:'Загрузка видео…',en:'Loading video…'};
-function mediaState(state){$('#video-loading').hidden=state!=='loading';$('#video-loading').textContent=loadText[lang];$('#video-error').hidden=state!=='error';$('#retry-video').hidden=state!=='error';story.dataset.mediaState=state}
+function mediaState(state){for(const id of ['video-loading','video-error','retry-video'])$('#'+id).hidden=true;story.dataset.mediaState=state}
 function initMedia(){player?.destroy();player=null;reduced=motionQuery.matches;document.documentElement.classList.toggle('reduced-motion',reduced);mediaState('ready');if(reduced){renderedStoryTime=0;setScene(0,true);story.dataset.phase='opening';return}player=new StoryPlayer({videos:[video,$('#hero-next')],onFrame:t=>{renderedStoryTime=t;story.dataset.frameTime=t.toFixed(3);setScene(t)},onState:mediaState});player.start();update()}
 $('#retry-video').addEventListener('click',initMedia);
+addEventListener('online',()=>{if(!isProductPage&&story.dataset.mediaState==='error')initMedia()});
 addEventListener('scroll',update,{passive:true});addEventListener('resize',update);motionQuery.addEventListener('change',initMedia);
 $('#chapters').addEventListener('click',e=>{const b=e.target.closest('[data-scene]');if(!b)return;const s=scenes[Number(b.dataset.scene)];window.scrollTo({top:story.offsetTop+progressFromTime(s.time+(s.time?1:0))*(story.offsetHeight-innerHeight),behavior:reduced?'instant':'smooth'})});
 $$('[data-lang]').forEach(b=>b.addEventListener('click',()=>{lang=b.dataset.lang;try{localStorage.setItem('karisan-language',lang)}catch{}translate();$('#language-options').hidden=true;$('#language-button').setAttribute('aria-expanded','false')}));

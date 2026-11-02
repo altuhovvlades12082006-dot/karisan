@@ -5,3 +5,11 @@
 /* Keep the supplied still visible until a decoded frame is actually drawn. */
 .story .story-canvas:not([data-drawn="true"]){opacity:0}
 .story:has(.story-canvas:not([data-drawn="true"])) .hero-poster{opacity:1;filter:none;transform:none}
+/* Quiet fallback, never a blocking loading/error widget over the store. */
+.story #video-loading,.story #video-error,.story #retry-video{display:none!important}
+.story-copy h1,.catalog-heading h2,.store-location h2{font-family:'Lora',Georgia,serif;font-weight:400;letter-spacing:-.035em}
+.story-copy h1{font-size:clamp(44px,4.9vw,78px);line-height:1.07;text-wrap:balance}
+.story-copy h1 em{font-family:inherit;font-style:italic;font-weight:400}
+.catalog-heading h2{line-height:1.12}
+@media(max-width:700px){.story-copy h1{font-size:clamp(30px,8.8vw,38px);line-height:1.08;letter-spacing:-.035em}.catalog-heading h2{font-size:38px}}
+@media(max-width:700px) and (max-height:620px){.story-copy h1{font-size:28px}}
