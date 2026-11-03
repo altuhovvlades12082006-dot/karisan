@@ -202,3 +202,4 @@ footer .social-links a{min-height:44px}
  .story-copy .pill{min-height:46px;padding:12px 22px}.story-copy #scene-description{line-height:1.65}
  .store-location{padding-block:32px;gap:24px}.store-location iframe{border-radius:14px}.store-location .pill{min-height:48px}
 }
+footer#contacts .site-credit{display:block;font-size:11px;line-height:1.6;font-weight:400;letter-spacing:.02em;color:var(--muted);margin-top:16px}

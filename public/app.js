@@ -1,7 +1,7 @@
 import { StoryPlayer } from './story-player.js?v=scroll-linked-final-20261102';
 import {timeFromProgress,progressFromTime} from './story-motion.js';
 import {animateSelection} from './selection-motion.js';
-const adminLink=document.createElement('a');adminLink.href='/admin';adminLink.textContent='Для адміністратора';document.querySelector('footer#contacts')?.append(adminLink);
+const adminLink=document.createElement('a');adminLink.href='/admin';adminLink.textContent='Для адміністратора';const footer=document.querySelector('footer#contacts');footer?.insertBefore(adminLink,footer.querySelector('.site-credit'));
 'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const isProductPage=/\/product(?:\.html)?\/?$/.test(location.pathname)||location.pathname.startsWith('/item/');
