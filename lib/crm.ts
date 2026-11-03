@@ -1,10 +1,11 @@
 import {db,initializeCatalog} from './store';
 import {digest} from './password-auth.mjs';
-import {inputText,uuid,validateCheckout,quoteItems} from './order-validation.mjs';
+import {inputText,uuid,validateCheckout,quoteItems,orderSnapshot} from './order-validation.mjs';
 import {shopDay} from './statistics.mjs';
 import {requestCountry} from './request-country';
 import {env} from 'cloudflare:workers';
 import {usesSupabase} from './supabase-catalog.mjs';
+import {verifyNovaSelection} from '../integrations/nova-poshta.mjs';
 type DB=ReturnType<typeof db>;
 export class Conflict extends Error{}
 export function checked(database:DB,statement:D1PreparedStatement,key:string){return [statement,database.prepare('INSERT INTO crm_checks (id,ok) VALUES (?,changes())').bind(key),database.prepare('DELETE FROM crm_checks WHERE id=?').bind(key)];}
@@ -18,6 +19,7 @@ export async function createOrder(raw:unknown){
   const b=validateCheckout(raw),database=db(),token=await digest(b.key),hash=await digest(JSON.stringify({...b,key:undefined}));
   const existing=await database.prepare('SELECT * FROM orders WHERE idempotency=?').bind(token).first<any>();if(existing){if(existing.request_hash!==hash)throw new Conflict('Цей запит уже використано. Перевірте попереднє замовлення');return receipt(existing);}
   if(!await acceptingOrders())throw new Conflict('Приймання замовлень ще не відкрите');
+  if(b.delivery.carrier==='nova')b.delivery=await verifyNovaSelection(env,b.delivery);
   await initializeCatalog();const map=new Map<string,any>();
   for(const id of new Set<string>(b.items.map((x:any)=>String(x.product)))){const row=await database.prepare('SELECT * FROM products WHERE id=?').bind(id).first<any>();if(row)map.set(id,{...row,product:JSON.parse(row.data)});}
   const quote=quoteItems(b.items,map),id=crypto.randomUUID(),number='KS-'+Date.now().toString(36).toUpperCase()+'-'+id.slice(0,6).toUpperCase(),now=new Date().toISOString(),customerId=await digest('customer:'+b.customer.phone);
@@ -26,7 +28,7 @@ export async function createOrder(raw:unknown){
     row.product.updatedAt=now;statements.push(...checked(database,database.prepare('UPDATE products SET data=?,version=version+1,updated_at=? WHERE id=? AND version=?').bind(JSON.stringify(row.product),now,pid,row.version),id+pid));
   }
   statements.push(database.prepare('INSERT OR IGNORE INTO customers (id,phone,name,email,notes,version,created_at,updated_at) VALUES (?,?,?,?,\'\',1,?,?)').bind(customerId,b.customer.phone,b.customer.name,b.customer.email,now,now));
-  statements.push(database.prepare('INSERT INTO orders (id,number,idempotency,request_hash,customer_id,data,status,amount,paid,refunded,stock_state,tracking,notes,country,source,session,version,day,created_at,updated_at) VALUES (?,?,?,?,?,?,\'new\',?,0,0,\'reserved\',\'\',\'\',?,?,?,1,?,?,?)').bind(id,number,token,hash,customerId,JSON.stringify({customer:b.customer,delivery:b.delivery,payment:b.payment,comment:b.comment}),quote.amount,requestCountry(),b.source,b.session,shopDay(),now,now));
+  statements.push(database.prepare('INSERT INTO orders (id,number,idempotency,request_hash,customer_id,data,status,amount,paid,refunded,stock_state,tracking,notes,country,source,session,version,day,created_at,updated_at) VALUES (?,?,?,?,?,?,\'new\',?,0,0,\'reserved\',\'\',\'\',?,?,?,1,?,?,?)').bind(id,number,token,hash,customerId,JSON.stringify(orderSnapshot(b)),quote.amount,requestCountry(),b.source,b.session,shopDay(),now,now));
   quote.lines.forEach((x:any,i:number)=>{statements.push(database.prepare('INSERT INTO order_items (id,order_id,product_id,variant_id,name,variant_name,sku,pillow,quantity,unit_amount,returned) VALUES (?,?,?,?,?,?,?,?,?,?,0)').bind(id+':'+i,id,x.product,x.variant,x.name,x.variantName,x.sku,x.pillow,x.qty,x.unitAmount));statements.push(database.prepare('INSERT INTO stock_movements (id,product_id,variant_id,order_id,delta,reason,created_at) VALUES (?,?,?,?,?,\'reserve\',?)').bind(crypto.randomUUID(),x.product,x.variant,id,-x.qty,now));});
   statements.push(database.prepare('INSERT INTO crm_actions (id,order_id,kind,request_hash,details,created_at) VALUES (?, ?,\'created\',?,\'{}\',?)').bind(id,id,hash,now));
   try{await database.batch(statements);}catch{const prior=await database.prepare('SELECT * FROM orders WHERE idempotency=?').bind(token).first<any>();if(prior&&prior.request_hash===hash)return receipt(prior);throw new Conflict('Товари змінилися під час оформлення. Оновіть кошик');}

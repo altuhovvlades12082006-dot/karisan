@@ -1,5 +1,9 @@
 # Delivery and checkout connection
 
+> Nova Poshta city/branch/locker/Ref/estimate preparation (not published):
+> [NOVA-POSHTA-PREPARATION.md](../docs/NOVA-POSHTA-PREPARATION.md).
+> Carrier responses are mocked in offline checks; real account validation pending.
+
 > Historical static-site notes below predate the current root Worker and D1 CRM.
 > Current launch audit and explicit blockers: [PRODUCTION-LAUNCH.md](../docs/PRODUCTION-LAUNCH.md).
 > Local catalogue/admin product APIs now share Supabase; see [SUPABASE-LOCAL.md](../docs/SUPABASE-LOCAL.md).
