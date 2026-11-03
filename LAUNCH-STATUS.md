@@ -1,26 +1,27 @@
-# Состояние запуска — 1 ноября 2026
+# Launch checkpoint — 2026-11-03
 
-Сайт: https://kari-san-lavender.altuhov-vlades120820.chatgpt.site/
-Админка: https://kari-san-lavender.altuhov-vlades120820.chatgpt.site/admin
+Scope: local `feature/production-launch`, existing Supabase project. Not a production release.
 
-## Проверено на действующем сайте
+| Component | Status | Evidence / remaining work |
+| --- | --- | --- |
+| Automated regression suite | PASS | 92 tests: `node --test tests/*.test.mjs` |
+| Production build | PASS | `npm run build` completed; no deployment |
+| Supabase order SQL safety | PASS | 008 applied. `tests/supabase-order-transaction.sql` executed in Supabase SQL editor: price/null price, pillow, verified delivery, stock, duplicate request, product version, stored refs. Fixtures rolled back. No concurrent-client test yet. |
+| Sandbox payment database ledger | PASS | 006 applied. Same rollback SQL test: duplicate event, wrong amount, late processing, sandbox isolation from real payment status. NOT a provider/webhook E2E test. |
+| Storefront order acceptance / full CRM | FAIL | Intentionally closed. Supabase admin orders remain read-only; customer/stock/action lifecycle and public order adapter mounting still need implementation and E2E verification. Do not launch ordering. |
+| Nova Poshta local lookup | PASS | Existing local city/branch/locker lookup verified with configured server key. Ref mapping regression tests passed. |
+| Nova shipping estimate | BLOCKED | Sender city and real parcel parameters required; no verified live estimate or TTN creation. |
+| Ukrposhta live lookup | BLOCKED | Owner's carrier credentials/contract pending; fixture tests do not establish live service availability. |
+| LiqPay signed HTTPS callback E2E | BLOCKED | Sandbox credentials and approved HTTPS test origin pending. Customer card checkout not enabled. |
+| Domain / production hosting / Google submission | BLOCKED | Owner must confirm hosting, domain, publication and legal details. Published Sites has separate runtime configuration; local secrets are not published. |
 
-- Вход по существующей почте и паролю успешно проверен. Пароль не хранится в этом документе или исходном коде.
-- Админка получает каталог и статистику с сервера; база подключена.
-- Отдельный VPS для нынешней архитектуры не нужен: сервер, D1 и R2 предоставлены текущей платформой. Условия оплаты платформы проверяются отдельно.
-- Внешний домен пока не подключён.
-- Приём заказов выключен. Онлайн-оплата и API перевозчиков не подключены.
+## Applied database changes and rollback boundary
 
-## Осталось до реальных продаж
+- 008 adds `order_items.pillow` and replaces the service-only order RPC. It does not enable ordering or alter existing commercial records.
+- 006 adds a separate sandbox ledger and sandbox status, never real payment confirmation.
+- 008 includes international-phone validation from 007; do not blindly rerun older bootstrap migrations.
+- Source rollback alone does not undo database migrations. Keep these additive columns/tables; restore the prior function definition from 007/003 only after review. No destructive automatic down migration.
+- Transactional QA temporarily enables checkout only inside its own uncommitted transaction, then rolls back all fixture/order/stock/settings changes. Other connections do not see the temporary gate or product.
+- This is not proof of a complete database backup/restore procedure. That launch requirement remains open.
 
-1. Владелица подтверждает юридический статус продавца и регистрирует кабинет выбранного платёжного провайдера. Идентификация, банковский счёт и принятие договора требуют её участия.
-2. Получить API-доступы Новой почты / Укрпочты; хранить ключи только в секретах сервера, не в переписке или репозитории.
-3. Реализовать и проверить оплату, подписанные уведомления провайдера, повторные уведомления, неудачный платёж и возврат. Ручная отметка оплаты в CRM не списывает деньги с карты.
-4. Проверить отделения, стоимость и оформление доставки через реальные кабинеты перевозчиков.
-5. Выбрать канал уведомлений менеджеру и покупателю; подключить доставку писем или другой согласованный сервис.
-6. Подтвердить актуальные цены, остатки каждого размера, контакты, условия доставки/возврата и сведения продавца. Импортированный каталог не синхронизируется автоматически с kari-san.ua.
-7. Настроить полную резервную копию CRM и файлов и проверить восстановление. Экспорт каталога и CSV статистики не являются полной копией.
-8. Выбрать домен или предоставить сведения об имеющемся хостинге; проверить совместимость, не оплачивая второй сервер заранее.
-9. Пройти контрольную покупку от корзины до оплаты, изменения остатка и доставки; проверить отмену и возврат. Только затем включить приём заказов в админке.
-
-Раздел «Готовность до запуску» в админке показывает текущие технические проверки, а не подтверждает выполнение договоров, законодательства или испытаний внешних сервисов.
+Next code milestone: service-only transactional CRM actions (status, actual payment receipt, refund and stock return), mapped into the existing admin UI, followed by browser-to-database checkout QA. Keep `/api/orders` closed until that milestone is verified. Do not replace unavailable providers with invented selections or estimates.
