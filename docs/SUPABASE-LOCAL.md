@@ -1,5 +1,21 @@
 # Supabase local catalogue — 2026-11-02
 
+## International phone update — 2026-11-03
+
+Local checkout now offers 245 country/territory calling-code entries, Ukrainian
+`+380` selected first. Shared browser/server normalization accepts formatted
+international numbers, without changing delivery country from UA. This is format
+validation, not SMS/ownership or exhaustive national numbering-plan validation.
+Calling-code facts are an offline snapshot of Google's libphonenumber metadata:
+https://github.com/google/libphonenumber/blob/master/resources/PhoneNumberMetadata.xml
+
+Migration 007 is prepared but **not applied** to Supabase: it updates the stored
+checkout RPC's former Ukraine-only format restriction and preserves service-only
+access. It does not change data or open checkout. Apply/review it before enabling
+Supabase orders; the current CRM/checkout launch blockers remain in effect.
+Browser test: Czech selection and formatted `+420` number reached order review;
+no order was created. 79 offline tests and build passed. No production publication.
+
 ## Verified
 
 - Existing project `jmbdtnxgomylvkxayfax` in `karisan admin` was resumed; dashboard
