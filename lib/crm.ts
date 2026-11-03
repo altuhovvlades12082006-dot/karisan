@@ -6,6 +6,7 @@ import {requestCountry} from './request-country';
 import {env} from 'cloudflare:workers';
 import {usesSupabase} from './supabase-catalog.mjs';
 import {verifyNovaSelection} from '../integrations/nova-poshta.mjs';
+import {verifyUkrSelection} from '../integrations/ukrposhta.mjs';
 type DB=ReturnType<typeof db>;
 export class Conflict extends Error{}
 export function checked(database:DB,statement:D1PreparedStatement,key:string){return [statement,database.prepare('INSERT INTO crm_checks (id,ok) VALUES (?,changes())').bind(key),database.prepare('DELETE FROM crm_checks WHERE id=?').bind(key)];}
@@ -20,6 +21,7 @@ export async function createOrder(raw:unknown){
   const existing=await database.prepare('SELECT * FROM orders WHERE idempotency=?').bind(token).first<any>();if(existing){if(existing.request_hash!==hash)throw new Conflict('Цей запит уже використано. Перевірте попереднє замовлення');return receipt(existing);}
   if(!await acceptingOrders())throw new Conflict('Приймання замовлень ще не відкрите');
   if(b.delivery.carrier==='nova')b.delivery=await verifyNovaSelection(env,b.delivery);
+  if(b.delivery.carrier==='ukr')b.delivery=await verifyUkrSelection(env,b.delivery);
   await initializeCatalog();const map=new Map<string,any>();
   for(const id of new Set<string>(b.items.map((x:any)=>String(x.product)))){const row=await database.prepare('SELECT * FROM products WHERE id=?').bind(id).first<any>();if(row)map.set(id,{...row,product:JSON.parse(row.data)});}
   const quote=quoteItems(b.items,map),id=crypto.randomUUID(),number='KS-'+Date.now().toString(36).toUpperCase()+'-'+id.slice(0,6).toUpperCase(),now=new Date().toISOString(),customerId=await digest('customer:'+b.customer.phone);

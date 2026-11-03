@@ -1,8 +1,8 @@
 // Mount on the same origin under /api/* when enabling server-side commerce.
 // Secrets belong in runtime environment variables, never in browser JS.
 import {novaCities,novaBranches,DeliveryError} from './nova-poshta.mjs';
+import {ukrBranches} from './ukrposhta.mjs';
 const json=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
-async function upstream(url,options={}){const r=await fetch(url,{...options,signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error('Carrier unavailable');return r.json()}
 export default {async fetch(request,env){
  const url=new URL(request.url);
  if(request.method!=='GET')return json({error:'method_not_allowed'},405);
@@ -19,9 +19,6 @@ export default {async fetch(request,env){
    return json(await novaBranches(env,{cityRef:url.searchParams.get('cityRef'),q,page,type:url.searchParams.get('type')||'all'}));
   }
   if(!/^\d{5}$/.test(q))return json({error:'invalid_postcode'},400);
-  const data=await upstream('https://www.ukrposhta.ua/address-classifier-ws/get_postoffices_by_postindex?pi='+encodeURIComponent(q),{headers:{Authorization:'Bearer '+env.UKRPOSHTA_BEARER,Accept:'application/json'}});
-  const entries=data?.Entries?.Entry;
-  const list=Array.isArray(entries)?entries:entries?[entries]:[];
-  return json({branches:list.filter(b=>String(b.LOCK_CODE)==='0'&&String(b.IS_NODISTRICT)==='0'&&String(b.RESTRICTED_ACCESS||'0')==='0').map(b=>({id:b.ID,label:[b.POSTINDEX,b.PO_SHORT,b.ADDRESS].filter(Boolean).join(' · ')}))});
+  return json({branches:await ukrBranches(env,q)});
  }catch(error){return json({error:error instanceof DeliveryError?error.message:'carrier_unavailable'},error instanceof DeliveryError?error.status:502)}
 }};

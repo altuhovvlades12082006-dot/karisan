@@ -4,7 +4,7 @@ import {db,json,sameOrigin,boundedBody} from '../../../lib/store';
 import {digest} from '../../../lib/password-auth.mjs';
 import {novaQuote,DeliveryError} from '../../../integrations/nova-poshta.mjs';
 async function limited(request:Request){
-  if(!env.NOVA_POSHTA_API_KEY)return null;
+  if(!env.NOVA_POSHTA_API_KEY&&!env.UKRPOSHTA_BEARER)return null;
   const window=Math.floor(Date.now()/60000),key='delivery:'+await digest((request.headers.get('cf-connecting-ip')||'local')+':'+window);
   const row=await db().prepare('INSERT INTO login_attempts (key,count,expires_at) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 RETURNING count').bind(key,(window+1)*60000).first<{count:number}>();
   return !row||row.count>60?json({error:'too_many_requests'},429):null;
