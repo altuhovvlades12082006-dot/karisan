@@ -1,5 +1,12 @@
 # Production launch — 2026-11-02
 
+> Historical audit, not the current runbook. Current verified state is in
+> [LAUNCH-STATUS.md](../LAUNCH-STATUS.md), owner inputs in
+> [OWNER-LAUNCH-INPUTS.md](../OWNER-LAUNCH-INPUTS.md), recovery in
+> [BACKUP-RESTORE.md](../BACKUP-RESTORE.md). Do not follow the old migration or
+> cutover instructions below against the existing database. Supabase CRM,
+> local carrier checkout and application recovery have since been tested.
+
 UPDATE: the local catalogue and admin product APIs are now connected to the
 existing Supabase project. See [SUPABASE-LOCAL.md](SUPABASE-LOCAL.md) for current
 verified scope. The initial audit below is historical where it says Supabase

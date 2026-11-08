@@ -4,7 +4,7 @@ Scope: local `feature/production-launch`, existing Supabase project. Not a produ
 
 | Component | Status | Evidence / remaining work |
 | --- | --- | --- |
-| Automated regression suite | PASS | 109 tests: `node --test tests/*.test.mjs`; 0 failures/skips. Includes QA separation, backup integrity and Nova request caching. |
+| Automated regression suite | PASS | 111 tests: `node --test tests/*.test.mjs`; 0 failures/skips. Includes QA separation, backup integrity, Nova request caching and absolute Storage photo SEO regression. |
 | Production build | PASS | `node scripts/run-framework.mjs build` completed; no deployment |
 | Supabase order SQL safety | PASS | 008 applied. `tests/supabase-order-transaction.sql` executed in Supabase SQL editor: price/null price, pillow, verified delivery, stock, duplicate request, product version, stored refs. Fixtures rolled back. No concurrent-client test yet. |
 | Sandbox payment database ledger | PASS | 006 applied. Same rollback SQL test: duplicate event, wrong amount, late processing, sandbox isolation from real payment status. NOT a provider/webhook E2E test. |
@@ -16,7 +16,7 @@ Scope: local `feature/production-launch`, existing Supabase project. Not a produ
 | Deployed HTTPS checkout / mobile hardware | BLOCKED | Requires approved hosting and post-deployment testing. Physical mobile-device performance was not tested. Local QA is not public HTTPS E2E. |
 | Nova Poshta local lookup | PASS | Existing local city/branch/locker lookup verified with configured server key. Ref mapping regression tests passed. |
 | Nova estimate adapter | PASS | Read-only real API quote succeeded for hypothetical Kyiv → Kyiv, 1 kg, declared 100 UAH. This is not the merchant's configured production rate. Directory calls are briefly cached/coalesced; failed calls are not retained. |
-| Nova production dispatch / TTN | BLOCKED | Actual sender city, parcel rules and authorized sender details still required. No real TTN or shipment created. |
+| Nova production dispatch / TTN | BLOCKED | Owner confirmed Khmelnytskyi; carrier city Ref resolved and saved locally. Read-only quote Khmelnytskyi → Kyiv passed with hypothetical 1 kg/100 UAH parcel. Actual parcel rules and authorized sender details still required. No real TTN or shipment created. |
 | Ukrposhta live lookup | BLOCKED | Owner's carrier credentials/contract pending; fixture tests do not establish live service availability. |
 | LiqPay signed HTTPS callback E2E | BLOCKED | Sandbox credentials and approved HTTPS test origin pending. Customer card checkout not enabled. |
 | Domain / production hosting / Google submission | BLOCKED | Owner must confirm hosting, domain, publication and legal details. Published Sites has separate runtime configuration; local secrets are not published. |

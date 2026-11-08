@@ -4,6 +4,20 @@ import {readFileSync} from 'node:fs';
 import {renderStorefront,siteOrigin,inCategory,missingPage} from '../lib/storefront-seo.mjs';
 const template=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
 const product={id:'fixture',uk:'Подушка <test>',category:'pillows',image:'assets/fixture.webp',price:123.45,material:{uk:'Текстиль </script><script>alert(1)</script>'},variants:[{id:'v1',uk:'50×70',sku:'SKU-1',price:123.45,stock:2},{id:'v2',uk:'70×70',sku:'SKU-2',price:150,stock:0},{id:'v3',uk:'Без ціни',price:null,stock:0}]};
+test('absolute Storage images survive SSR, Open Graph and Product metadata',()=>{
+  const image='https://project.supabase.co/storage/v1/object/public/product-images/photo.webp';
+  const html=renderStorefront(template,{origin:'https://shop.example',product:{...product,image},products:[{...product,image}]});
+  assert.ok(html.includes('property="og:image" content="'+image+'"'));
+  assert.ok(html.includes('src="'+image+'"'));
+  const graph=JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1])['@graph'];
+  assert.deepEqual(graph.find(p=>p['@type']==='Product').image,[image]);
+  assert.ok(!html.includes('https://shop.example/https:'));
+});
+test('unsafe image schemes are not rendered into SEO attributes',()=>{
+  const html=renderStorefront(template,{origin:'https://shop.example',product:{...product,image:'javascript:alert(1)'}});
+  assert.ok(!html.includes('javascript:'));
+  assert.ok(html.includes('https://shop.example/assets/poster-desktop.webp'));
+});
 test('product server HTML contains escaped title, canonical, visible data and exact variant offers',()=>{
   const html=renderStorefront(template,{origin:'https://shop.example',product});
   assert.match(html,/<title>Подушка &lt;test&gt; — Kari-San<\/title>/);
