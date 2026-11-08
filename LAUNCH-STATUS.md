@@ -4,7 +4,7 @@ Scope: local `feature/production-launch`, existing Supabase project. Not a produ
 
 | Component | Status | Evidence / remaining work |
 | --- | --- | --- |
-| Automated regression suite | PASS | 111 tests: `node --test tests/*.test.mjs`; 0 failures/skips. Includes QA separation, backup integrity, Nova request caching and absolute Storage photo SEO regression. |
+| Automated regression suite | PASS | 113 tests: `node --test tests/*.test.mjs`; 0 failures/skips. Includes QA separation, backup integrity, Nova request caching, absolute Storage photo SEO and localized SSR regression. |
 | Production build | PASS | `node scripts/run-framework.mjs build` completed; no deployment |
 | Supabase order SQL safety | PASS | 008 applied. `tests/supabase-order-transaction.sql` executed in Supabase SQL editor: price/null price, pillow, verified delivery, stock, duplicate request, product version, stored refs. Fixtures rolled back. No concurrent-client test yet. |
 | Sandbox payment database ledger | PASS | 006 applied. Same rollback SQL test: duplicate event, wrong amount, late processing, sandbox isolation from real payment status. NOT a provider/webhook E2E test. |
@@ -21,7 +21,8 @@ Scope: local `feature/production-launch`, existing Supabase project. Not a produ
 | LiqPay signed HTTPS callback E2E | BLOCKED | Sandbox credentials and approved HTTPS test origin pending. Customer card checkout not enabled. |
 | Domain / production hosting / Google submission | BLOCKED | Owner must confirm hosting, domain, publication and legal details. Published Sites has separate runtime configuration; local secrets are not published. |
 | Local SEO checks | PASS | `node tests/seo-local.mjs`: server-rendered product/category metadata, canonical/JSON-LD, sitemap/robots, redirects and 404. |
-| Seller policies / multilingual indexing | BLOCKED | Approved legal seller details and policies absent. Distinct RU/EN URLs and hreflang are not verified/ready; do not advertise full multilingual indexing. |
+| Ukrainian/Russian/English catalogue SEO | PASS | Separate UK root, `/ru` and `/en` home/product/category routes, translated server titles/content, self canonicals, reciprocal hreflang with x-default, localized sitemap and missing-item 404 tested locally. All 84 active product/variant records have RU/EN labels. Browser English → Russian retains product ID and renders price/size/stock. Final domain crawling still requires deployed checks. |
+| Seller policies | BLOCKED | Approved legal seller details and delivery/return/privacy terms absent; no fabricated legal information. |
 | Application backup / restore rehearsal | PASS | Encrypted 13-table snapshot plus 88 images verified locally; actual PostgreSQL isolated-schema row/FK restore rehearsal passed and rolled back. This is not a full infrastructure recovery. See BACKUP-RESTORE.md. |
 | Off-device backup / disaster cutover | BLOCKED | Owner-controlled destination, separate recovery-key copy, scheduling and full infrastructure recovery procedure remain outstanding. |
 | GitHub pull request | BLOCKED | Integration returned 403 on PR creation. Feature branch can be pushed; no PR creation is claimed. |

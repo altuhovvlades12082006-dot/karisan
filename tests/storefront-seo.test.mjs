@@ -57,6 +57,27 @@ test('category matching preserves child/fabric/new filters and 404 content is no
 });
 test('client-rendered cards retain real crawlable item links and category pages skip video startup',()=>{
   const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
-  assert.ok(app.includes('<a href="/item/${encodeURIComponent(p.id)}" data-product="${p.id}"'));
+  assert.ok(app.includes('<a href="${languagePrefix}/item/${encodeURIComponent(p.id)}" data-product="${p.id}"'));
   assert.ok(app.includes('if(!isProductPage&&!isCategoryPage){route();initMedia()}'));
+});
+test('localized SSR uses translated product, category and reciprocal language metadata',()=>{
+  for(const lang of ['ru','en']){
+    const p={...product,ru:'Подушка тест',en:'Test pillow',material:{uk:'Бавовна',ru:'Хлопок',en:'Cotton'},variants:product.variants.map(v=>({...v,ru:'Размер',en:'Size'}))};
+    const html=renderStorefront(template,{origin:'https://shop.example',product:p,products:[p],lang});
+    assert.ok(html.includes('<html lang="'+lang+'"'));
+    assert.ok(html.includes('<title>'+p[lang]+' — Kari-San</title>'));
+    assert.ok(html.includes('rel="canonical" href="https://shop.example/'+lang+'/item/fixture"'));
+    for(const l of ['uk','ru','en','x-default'])assert.ok(html.includes('hreflang="'+l+'"'));
+    assert.ok(html.includes('href="/'+lang+'/category/pillows"'));
+    const graph=JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1])['@graph'];
+    assert.equal(graph.find(x=>x['@type']==='Product').name,p[lang]);
+    assert.equal(graph.find(x=>x['@type']==='Product').offers[0].price,'123.45');
+  }
+});
+test('localized home renders translated hero and footer without JavaScript',()=>{
+  const html=renderStorefront(template,{origin:'https://shop.example',lang:'en'});
+  assert.ok(html.includes('The art<br>of <em>comfort.</em>'));
+  assert.ok(html.includes('Where comfort begins.'));
+  assert.ok(html.includes('hreflang="uk" href="https://shop.example/"'));
+  assert.ok(html.includes('rel="canonical" href="https://shop.example/en"'));
 });

@@ -8,7 +8,7 @@ Before opening even COD orders, confirm:
 - Actual parcel weights/dimensions or an approved packaging rule for each variant; who pays delivery/COD commission. No invented production shipping rate or TTN is configured.
 - Authorized sender details and recipient data/consent before any real shipment or TTN creation. Read-only directory/price tests do not create shipments.
 - Approved public seller identity/requisites, support contacts/hours, dispatch timeframe, delivery/return conditions, privacy notice and any offer terms. No legal identity, tax number, policy or statutory promise should be invented from the brand name. Existing shop contacts are not proof of legal seller identity.
-- Approved Ukrainian content; Russian/English indexable URLs/hreflang must not be declared until distinct translated pages are actually available. Existing language switching is not proof of multilingual SEO.
+- Owner review of existing product translations and new policy content. Ukrainian/Russian/English catalogue URLs, SSR and hreflang are now implemented and locally tested; Google indexing and final-domain validation remain post-deployment actions.
 - A secure owner-controlled off-device location for encrypted backups and a separate recovery-key copy. No third-party backup account or paid service was opened.
 
 Google Search Console submission waits for the real domain and owner access: verify the domain using Google's provided record after approval, validate HTTPS/canonical URLs on the deployed site, then submit `/sitemap.xml`. No DNS changes or Search Console submission were made here. Indexing speed/rank is not guaranteed.

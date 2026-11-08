@@ -20,7 +20,8 @@ test('all original categories remain reachable but the repeated towel lift is ex
 });
 test('pillows keep their original source chapter, not an early replacement label',()=>{
  const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
- assert.match(app,/time:18\.45,cat:'pillows'/);
+ const copy=readFileSync(new URL('../public/storefront-copy.js',import.meta.url),'utf8');
+ assert.match(copy,/time:18\.45,cat:'pillows'/);
  assert.doesNotMatch(app,/scenes\[6\]\.time\s*=/);
  assert.ok(timeFromProgress(progressFromTime(20))>18.45);
 });

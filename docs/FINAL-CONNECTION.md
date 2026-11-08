@@ -50,8 +50,11 @@ or promises will be fabricated. See [owner inputs](../OWNER-LAUNCH-INPUTS.md).
 Ukrainian product/category URLs, SSR metadata, canonical URLs, Open Graph,
 Product/Offer/BreadcrumbList, robots, sitemap, redirects and missing-product 404
 have local checks. Absolute Storage photo URLs are preserved in SSR and metadata.
-Russian/English client translation is not independent multilingual indexing;
-do not add fake hreflang to pages without distinct server-translated URLs.
+Russian/English home, product and category pages now have independent server-rendered
+URLs under `/ru` and `/en`, translated catalogue content, self canonicals and
+reciprocal hreflang including the Ukrainian default. The sitemap lists all three
+languages. Local HTTP checks and English → Russian product switching passed.
+Actual Google crawling/indexing still waits for publication and the final domain.
 
 After hosting is configured: verify HTTPS and the final canonical host, inspect
 robots/sitemap and representative product URLs, run checkout/admin/photo tests,

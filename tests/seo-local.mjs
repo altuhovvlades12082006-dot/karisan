@@ -17,3 +17,15 @@ const sitemap=await fetch(base+'/sitemap.xml');assert.equal(sitemap.status,200);
 assert.ok(xml.includes(base+'/item/'+p.id));assert.ok(xml.includes(base+'/category/children'));assert.ok(!xml.includes('/admin'));
 const robots=await fetch(base+'/robots.txt');assert.equal(robots.status,200);assert.ok((await robots.text()).includes('Sitemap: '+base+'/sitemap.xml'));
 console.log('PASS: local server-rendered product/category, canonical/JSON-LD, missing item/category 404, legacy redirects, sitemap and robots');
+for(const lang of ['ru','en']){
+  for(const path of ['/','/item/'+p.id,'/category/children']){
+    const response=await fetch(base+'/'+lang+path);assert.equal(response.status,200,lang+path);
+    const page=await response.text();assert.ok(page.includes('<html lang="'+lang+'"'));
+    assert.ok(page.includes('rel="canonical" href="'+base+'/'+lang+(path==='/'?'':path)+'"'));
+    for(const l of ['uk','ru','en','x-default'])assert.ok(page.includes('hreflang="'+l+'"'));
+    if(path.startsWith('/item/'))assert.ok(page.includes('<title>'+p[lang]+' — Kari-San</title>'));
+  }
+  assert.ok(xml.includes(base+'/'+lang+'/item/'+p.id));
+  assert.equal((await fetch(base+'/'+lang+'/item/no-such-product')).status,404);
+}
+console.log('PASS: UK/RU/EN server routes, translated titles, reciprocal hreflang, canonical URLs, localized sitemap and 404');
