@@ -4,12 +4,27 @@ export class DeliveryError extends Error{constructor(code,status=400){super(code
 const text=(value,max=100)=>typeof value==='string'?value.trim().slice(0,max):'';
 const pageNumber=value=>{const page=Number(value??1);if(!Number.isInteger(page)||page<1||page>500)throw new DeliveryError('invalid_page');return page;};
 const branchKind=b=>b.CategoryOfWarehouse==='Postomat'||/поштомат|postomat|parcel locker/i.test(b.Description||'')?'postomat':'branch';
+const addressCaches=new WeakMap();
 export async function novaCall(env,model,method,properties,fetcher=fetch){
   if(!env.NOVA_POSHTA_API_KEY)throw new DeliveryError('not_configured',503);
+  // Brief server-memory cache/coalescing for identical directory lookups only.
+  // Avoids a burst of the same request when two buyers verify the same branch.
+  const cached=model==='Address'&&['getCities','getWarehouses'].includes(method);
+  let cache,key;
+  if(cached){cache=addressCaches.get(fetcher);if(!cache){cache=new Map();addressCaches.set(fetcher,cache);}
+    key=JSON.stringify([env.NOVA_POSHTA_API_KEY,model,method,properties]);
+    const prior=cache.get(key);if(prior&&prior.expires>Date.now())return prior.promise;
+  }
+  const request=async()=>{
   let response,data;
   try{response=await fetcher('https://api.novaposhta.ua/v2.0/json/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apiKey:env.NOVA_POSHTA_API_KEY,modelName:model,calledMethod:method,methodProperties:properties}),signal:AbortSignal.timeout(8000)});if(!response.ok)throw Error();data=await response.json();}catch{throw new DeliveryError('carrier_unavailable',502);}
   if(data.success!==true||!Array.isArray(data.data))throw new DeliveryError('carrier_unavailable',502);
   return data.data;
+  };
+  const promise=request();
+  if(cached){cache.set(key,{expires:Date.now()+15000,promise});if(cache.size>64)cache.delete(cache.keys().next().value);
+    promise.catch(()=>{if(cache.get(key)?.promise===promise)cache.delete(key);});}
+  return promise;
 }
 export async function novaCities(env,{q,page},fetcher=fetch){
   q=text(q);if(q.length<2)throw new DeliveryError('invalid_query');page=pageNumber(page);
@@ -18,7 +33,9 @@ export async function novaCities(env,{q,page},fetcher=fetch){
 }
 export async function novaBranches(env,{cityRef,q='',page,type='all'},fetcher=fetch){
   if(!validRef(cityRef)||!['all','branch','postomat'].includes(type))throw new DeliveryError('invalid_selection');page=pageNumber(page);
-  const data=await novaCall(env,'Address','getWarehouses',{CityRef:cityRef,FindByString:text(q),Page:String(page),Limit:'200',Language:'UA'},fetcher);
+  // Without a search, early pages may contain only branches and hide all lockers.
+  const query=text(q)||(type==='postomat'?'Поштомат':'');
+  const data=await novaCall(env,'Address','getWarehouses',{CityRef:cityRef,FindByString:query,Page:String(page),Limit:'200',Language:'UA'},fetcher);
   const branches=data.filter(b=>validRef(b.Ref)&&b.CityRef===cityRef&&(!b.WarehouseStatus||b.WarehouseStatus==='Working')).map(b=>({id:b.Ref,cityRef:b.CityRef,city:b.CityDescription||'',number:String(b.Number||''),label:[b.CityDescription,b.Description].filter(Boolean).join(' · '),type:branchKind(b),typeRef:b.TypeOfWarehouse||''}));
   return {branches:branches.filter(b=>type==='all'||b.type===type),page,hasMore:data.length===200};
 }

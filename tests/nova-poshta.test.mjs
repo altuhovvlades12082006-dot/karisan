@@ -6,6 +6,22 @@ const city='11111111-1111-4111-8111-111111111111',branch='22222222-2222-4222-822
 const env={NOVA_POSHTA_API_KEY:'fixture-only',NOVA_POSHTA_SENDER_CITY_REF:sender};
 const points=[{Ref:branch,CityRef:city,Number:'1',CityDescription:'Київ',Description:'Відділення №1',CategoryOfWarehouse:'Branch',WarehouseStatus:'Working'},{Ref:locker,CityRef:city,Number:'100',CityDescription:'Київ',Description:'Поштомат №100',CategoryOfWarehouse:'Postomat',WarehouseStatus:'Working'}];
 const selection={carrier:'nova',country:'UA',city:'forged city',branch:'forged label',cityRef:city,branchRef:branch,branchNumber:'1',type:'branch'};
+test('locker filter without text searches lockers rather than empty early branch-only pages',async()=>{
+  await novaBranches(env,{cityRef:city,type:'postomat'},async(url,options)=>{
+    assert.equal(JSON.parse(options.body).methodProperties.FindByString,'Поштомат');return Response.json({success:true,data:[]});
+  });
+});
+test('identical concurrent directory requests are coalesced and separate keys never share cache',async()=>{
+  let calls=0;const mock=async()=>{calls++;return Response.json({success:true,data:points});};
+  const results=await Promise.all([novaBranches(env,{cityRef:city,type:'all',q:'1'},mock),novaBranches(env,{cityRef:city,type:'all',q:'1'},mock)]);
+  assert.equal(calls,1);assert.deepEqual(results[0],results[1]);
+  await novaBranches({...env,NOVA_POSHTA_API_KEY:'other-fixture-only'},{cityRef:city,type:'all',q:'1'},mock);assert.equal(calls,2);
+});
+test('failed directory requests are not retained in cache',async()=>{
+  let calls=0;const mock=async()=>{calls++;return Response.json({success:calls>1,data:points});};
+  await assert.rejects(()=>novaBranches(env,{cityRef:city,type:'all'},mock));
+  assert.equal((await novaBranches(env,{cityRef:city,type:'all'},mock)).branches.length,2);assert.equal(calls,2);
+});
 const mock=data=>async(url,options)=>{assert.equal(url,'https://api.novaposhta.ua/v2.0/json/');assert.equal(JSON.parse(options.body).apiKey,'fixture-only');return Response.json({success:true,data});};
 test('cities keep canonical Ref and paginate without exposing the server key',async()=>{
   const r=await novaCities(env,{q:'Ки',page:2},async(url,opts)=>{const b=JSON.parse(opts.body);assert.equal(b.calledMethod,'getCities');assert.equal(b.methodProperties.Page,'2');return Response.json({success:true,data:[{Ref:city,Description:'Київ',AreaDescription:'Київська'}]});});
