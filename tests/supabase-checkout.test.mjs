@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {orderPayload} from '../lib/supabase-checkout.mjs';
+import {orderPayload,createSupabaseOrder} from '../lib/supabase-checkout.mjs';
+import {validateCheckout} from '../lib/order-validation.mjs';
+import {digest} from '../lib/password-auth.mjs';
 import {mapOrder} from '../lib/supabase-crm.mjs';
 const checkout={customer:{name:'QA',email:'',phone:'+380501234567'},delivery:{carrier:'nova'},comment:'',items:[{product:'p',variant:'v',qty:2,expectedAmount:1200,pillow:'50x70'}]};
 test('verified Nova refs and pillow choice survive SQL payload and admin mapping',()=>{
@@ -27,4 +29,12 @@ test('008 guards nullable price, product identity, stock version and service-onl
   for(const fragment of ['variant.price is null','variant.product_id is distinct from',"'catalog:'||product_key",'version=version+1','delivery_not_verified','idempotency_conflict','invalid_pillow','orders_disabled','card_not_enabled','from public,anon,authenticated'])assert.ok(sql.includes(fragment),fragment);
   assert.doesNotMatch(sql,/\b(?:delete from|truncate|drop table)\b/i);
   assert.ok(sql.indexOf("'catalog:'||product_key")<sql.indexOf('order by v.id for update'));
+});
+test('successful retry returns its receipt without contacting carrier or reserving stock again',async()=>{
+  const raw={key:'a'.repeat(64),consent:true,customer:{name:'QA test',phone:'+380501234567',email:''},delivery:{carrier:'ukr',city:'QA',branch:'QA',postcode:'01001',branchId:'123'},payment:'cod',items:[{product:'p',variant:'v',qty:1,expectedAmount:1000}]};
+  const hash=await digest(JSON.stringify({...validateCheckout(raw),key:undefined}));let calls=0;
+  const env={SUPABASE_URL:'https://fixture.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'sb_secret_fixture',SUPABASE_CHECKOUT_ENABLED:'true'};
+  const result=await createSupabaseOrder(env,raw,'ZZ',async url=>{calls++;assert.ok(url.includes('/orders?'));return Response.json([{id:'order',order_number:'KS-QA',total:'10.00',status:'processing',client_request_hash:hash}]);});
+  assert.equal(calls,1);assert.equal(result.amount,1000);assert.equal(result.status,'processing');
+  await assert.rejects(()=>createSupabaseOrder(env,{...raw,comment:'changed'},'ZZ',async()=>Response.json([{client_request_hash:hash}])),/іншими даними/);
 });

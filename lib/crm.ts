@@ -5,12 +5,13 @@ import {shopDay} from './statistics.mjs';
 import {requestCountry} from './request-country';
 import {env} from 'cloudflare:workers';
 import {usesSupabase} from './supabase-catalog.mjs';
+import {supabaseAccepting} from './supabase-crm.mjs';
 import {verifyNovaSelection} from '../integrations/nova-poshta.mjs';
 import {verifyUkrSelection} from '../integrations/ukrposhta.mjs';
 type DB=ReturnType<typeof db>;
 export class Conflict extends Error{}
 export function checked(database:DB,statement:D1PreparedStatement,key:string){return [statement,database.prepare('INSERT INTO crm_checks (id,ok) VALUES (?,changes())').bind(key),database.prepare('DELETE FROM crm_checks WHERE id=?').bind(key)];}
-export async function acceptingOrders(){if(usesSupabase(env))return false;const r=await db().prepare("SELECT value FROM settings WHERE key='orders-enabled'").first<{value:string}>();return r?.value==='true';}
+export async function acceptingOrders(){if(usesSupabase(env))return supabaseAccepting(env);const r=await db().prepare("SELECT value FROM settings WHERE key='orders-enabled'").first<{value:string}>();return r?.value==='true';}
 export async function orderDetail(id:string){const database=db();const order=await database.prepare('SELECT * FROM orders WHERE id=?').bind(id).first<any>();if(!order)return null;
   const [items,transactions,history]=await database.batch([database.prepare('SELECT * FROM order_items WHERE order_id=?').bind(id),database.prepare('SELECT * FROM order_transactions WHERE order_id=? ORDER BY created_at').bind(id),database.prepare('SELECT kind,details,created_at FROM crm_actions WHERE order_id=? ORDER BY created_at').bind(id)]);
   return {...order,data:JSON.parse(order.data),items:items.results,transactions:transactions.results,history:history.results.map((x:any)=>({...x,details:JSON.parse(x.details)}))};

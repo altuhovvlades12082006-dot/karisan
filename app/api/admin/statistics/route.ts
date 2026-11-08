@@ -3,10 +3,14 @@ import {dateRange} from '../../../../lib/statistics.mjs';
 import {acceptingOrders} from '../../../../lib/crm';
 import {env} from 'cloudflare:workers';
 import {usesSupabase} from '../../../../lib/supabase-catalog.mjs';
+import {supabaseStatistics} from '../../../../lib/supabase-statistics.mjs';
 export async function GET(r:Request){
   const denied=await guard(r);if(denied)return denied;
-  if(usesSupabase(env))return json({error:'Каталог працює у Supabase. Статистика продажів і CRM ще переносяться; дані D1 не показуються як продажі Supabase.'},503);
   let range;try{range=dateRange(new URL(r.url).searchParams);}catch(e){return json({error:(e as Error).message},400);}
+  if(usesSupabase(env)){
+    try{return json(await supabaseStatistics(env,db(),range));}
+    catch{return json({error:'Не вдалося завантажити статистику Supabase. Перевірте підключення та міграції CRM.'},503);}
+  }
   const {start,end}=range,database=db();
   const results=await database.batch([
     database.prepare('SELECT type,COUNT(*) AS events,COUNT(DISTINCT session) AS sessions FROM analytics_events WHERE day BETWEEN ? AND ? GROUP BY type').bind(start,end),

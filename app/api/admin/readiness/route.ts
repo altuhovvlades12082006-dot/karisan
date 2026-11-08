@@ -3,18 +3,21 @@ import {db,guard,json} from '../../../../lib/store';
 import {credentialsReady} from '../../../../lib/admin-session';
 import {acceptingOrders} from '../../../../lib/crm';
 import {usesSupabase,supabaseProducts,supabaseClient} from '../../../../lib/supabase-catalog.mjs';
+import {crmRPC} from '../../../../lib/supabase-crm.mjs';
 
 export async function GET(request:Request){
   try{
     const denied=await guard(request);if(denied)return denied;
     if(usesSupabase(env)){
       const products=await supabaseProducts(env);let storage=false;
+      let crm=false;try{await crmRPC(env,'server_crm_counts',{});crm=true;}catch{}
       try{await supabaseClient(env)('/storage/v1/bucket/product-images');storage=true;}catch{}
       return json({checkedAt:new Date().toISOString(),checks:[
         {label:'Каталог Supabase',ready:true,detail:`Сайт і ця адмінка читають одну базу Supabase. Активних товарів: ${products.length}.`},
         {label:'Вхід адміністратора',ready:credentialsReady(),detail:'Збережено захищений серверний вхід через пошту і пароль; сесії поки у D1.'},
         {label:'Фото Supabase',ready:storage,detail:storage?'Сховище доступне.':'Перевірте сховище перед завантаженням фото.'},
-        {label:'CRM та приймання замовлень',ready:false,detail:'Вимкнено: перенесення CRM і резервування залишків до Supabase ще не завершено. Старі D1-замовлення не змішуються з новим каталогом.'},
+        {label:'CRM Supabase',ready:crm,detail:crm?'CRM підключено: статуси, фактичні надходження, повернення та рух залишків. Старі D1-замовлення не змішуються.':'Перевірте міграції 009–010 і підключення CRM.'},
+        {label:'Приймання нових замовлень',ready:await acceptingOrders(),detail:'Окремий дозвіл сервера й налаштування адміністратора. До дозволеного запуску залишається закритим.'},
         {label:'LiqPay',ready:false,detail:env.LIQPAY_PUBLIC_KEY&&env.LIQPAY_PRIVATE_KEY?'Sandbox-маршрути підготовлено. Міграція 006, HTTPS webhook і реальна тестова транзакція ще потребують перевірки. Реальні платежі заборонено.':'Потрібен бізнес-кабінет LiqPay, sandbox-ключі й HTTPS webhook. Серверні маршрути підготовлено; онлайн-оплата вимкнена.'},
         {label:'Нова пошта',ready:false,detail:env.NOVA_POSHTA_API_KEY?'Ключ задано. Потрібна перевірка справжніх відділень і збереження доставки в замовленні.':'Потрібен кабінет власниці й API-ключ. Пошук відділень вимкнений; вигадані дані не підставляються.'},
         {label:'Укрпошта',ready:false,detail:env.UKRPOSHTA_BEARER?'Bearer задано. Потрібна перевірка справжніх відділень за індексом і доставки в замовленні.':'Потрібен API-доступ за договором власниці. Пошук за індексом вимкнений до підключення bearer.'},

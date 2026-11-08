@@ -2,8 +2,8 @@ import {db,guard,json,boundedBody} from '../../../../lib/store';
 import {acceptingOrders,orderDetail,updateOrder,Conflict} from '../../../../lib/crm';
 import {inputText} from '../../../../lib/order-validation.mjs';
 import {env} from 'cloudflare:workers';
-import {usesSupabase} from '../../../../lib/supabase-catalog.mjs';
-import {readSupabaseOrders} from '../../../../lib/supabase-crm.mjs';
+import {usesSupabase,CommerceError,CatalogConflict} from '../../../../lib/supabase-catalog.mjs';
+import {readSupabaseOrders,updateSupabaseCRM} from '../../../../lib/supabase-crm.mjs';
 export async function GET(r:Request){const denied=await guard(r);if(denied)return denied;
   if(usesSupabase(env)){
     try{const result=await readSupabaseOrders(env,new URL(r.url));
@@ -22,7 +22,10 @@ export async function GET(r:Request){const denied=await guard(r);if(denied)retur
   const {results:counts}=await database.prepare('SELECT status,COUNT(*) AS total FROM orders GROUP BY status').all();return json({orders:results,counts,accepting:await acceptingOrders()});
 }
 export async function POST(r:Request){const denied=await guard(r,true);if(denied)return denied;
-  if(usesSupabase(env))return json({error:'CRM ще переноситься до Supabase; приймання замовлень вимкнено.'},503);
+  if(usesSupabase(env)){
+    try{return json(await updateSupabaseCRM(env,JSON.parse(new TextDecoder().decode(await boundedBody(r,12000)))));}
+    catch(e){return json({error:e instanceof CommerceError||e instanceof CatalogConflict?e.message:'Не вдалося виконати операцію. Оновіть дані та звірте історію.'},e instanceof CommerceError?e.status:e instanceof CatalogConflict?409:400);}
+  }
   try{const body=JSON.parse(new TextDecoder().decode(await boundedBody(r,12000)));
     if(body.action==='settings'){if(typeof body.accepting!=='boolean'||body.accepting&&body.ready!==true)throw Error('Підтвердьте готовність приймати та обробляти замовлення');await db().prepare("INSERT INTO settings (key,value) VALUES ('orders-enabled',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(JSON.stringify(body.accepting)).run();return json({accepting:body.accepting});}
     if(body.action==='customer'){const name=inputText(body.name,100,true),email=inputText(body.email||'',254),notes=inputText(body.notes||'',3000);if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw Error('Перевірте пошту');const result=await db().prepare('UPDATE customers SET name=?,email=?,notes=?,version=version+1,updated_at=? WHERE id=? AND version=?').bind(name,email,notes,new Date().toISOString(),body.id,body.version).run();if(result.meta.changes!==1)throw new Conflict('Контакт вже змінився. Оновіть дані');return json({ok:true});}
