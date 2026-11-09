@@ -1,10 +1,12 @@
-# Launch checkpoint — 2026-11-08
+# Launch checkpoint — 2026-11-09
 
 Scope: local `feature/production-launch`, existing Supabase project. Not a production release.
 
 | Component | Status | Evidence / remaining work |
 | --- | --- | --- |
-| Automated regression suite | PASS | 113 tests: `node --test tests/*.test.mjs`; 0 failures/skips. Includes QA separation, backup integrity, Nova request caching, absolute Storage photo SEO and localized SSR regression. |
+| Automated regression suite | PASS | 121 tests: `node --test tests/*.test.mjs`; 0 failures/skips. Includes QA separation, backup integrity, Nova request caching, image/localized SEO, checkout request failures and fail-closed delivery selection. |
+| Checkout availability / recovery UX | PASS | Browser verified loading → English checkout, Nova enabled, unconfigured Ukrposhta disabled, card payment disabled. Missing/malformed carrier config cannot enable a carrier. Network/HTTP/malformed data rejection and 12-second request bounds tested; UI offers localized retry instead of a silent return. No new order submitted during this check. |
+| Admin configuration diagnostics | PASS | Unit-tested non-secret Nova key presence, sender Ref and HTTPS canonical-origin checks. Copy distinguishes configuration from live provider/HTTPS verification and describes backup scope accurately. It does not claim provider or off-device backup success from key presence. |
 | Production build | PASS | `node scripts/run-framework.mjs build` completed; no deployment |
 | Supabase order SQL safety | PASS | 008 applied. `tests/supabase-order-transaction.sql` executed in Supabase SQL editor: price/null price, pillow, verified delivery, stock, duplicate request, product version, stored refs. Fixtures rolled back. No concurrent-client test yet. |
 | Sandbox payment database ledger | PASS | 006 applied. Same rollback SQL test: duplicate event, wrong amount, late processing, sandbox isolation from real payment status. NOT a provider/webhook E2E test. |

@@ -1,5 +1,6 @@
 import {normalizePhone,phoneCountries,countryCodes} from './phone.js';
 import {mountNovaCheckout} from './nova-checkout.js';
+import {deliveryAvailability,checkoutMessages,loadCheckoutData} from './checkout-state.js';
 const $=s=>document.querySelector(s);
 const copy={
 uk:{title:'Доставка й оплата',contact:'Одержувач',name:'Ім’я та прізвище',phone:'Телефон',delivery:'Доставка',city:'Місто / населений пункт',branch:'Відділення або поштомат',postcode:'Поштовий індекс відділення',payment:'Оплата',cod:'Післяплата',card:'Онлайн карткою',soon:'Готується до запуску',note:'Комісія за післяплату та доставка оплачуються окремо за тарифами перевізника.',comment:'Коментар до замовлення',review:'Перевірити замовлення',back:'Редагувати',total:'Товари',shipping:'Доставка',tariff:'За тарифами перевізника',pending:'Це перевірка даних, не підтверджене замовлення. Прийом замовлень ще готується до запуску.',contactShop:'Зателефонувати магазину',empty:'Спочатку додайте товар до кошика.',lookup:'Знайти відділення',unavailable:'Автоматичний пошук ще не підключено. Вкажіть відділення вручну.',error:'Не вдалося завантажити відділення. Спробуйте ще раз.',choose:'Оберіть відділення',invalid:'Перевірте український номер телефону.',stock:'Кількість або товар змінилися. Поверніться до кошика.',privacy:'Дані поки залишаються на цій сторінці й не надсилаються магазину.'},
@@ -16,7 +17,9 @@ function field(name,label,extra=''){return '<label>'+label+'<input name="'+name+
 function render(){
  const t=c();
  $('#checkout-content').innerHTML='<p class="eyebrow">KARI-SAN</p><h2 id="checkout-title">'+t.title+'</h2><form id="checkout-form"><div class="checkout-grid"><div><fieldset><legend>01 · '+t.contact+'</legend>'+field('name',t.name,'required minlength="3" maxlength="100" autocomplete="name"')+field('phone',t.phone,'type="tel" required maxlength="25" autocomplete="tel" placeholder="+380"')+'</fieldset><fieldset><legend>02 · '+t.delivery+'</legend><div class="checkout-options"><label><input type="radio" name="carrier" value="nova" checked>Нова пошта</label><label><input type="radio" name="carrier" value="ukr">Укрпошта</label></div>'+field('city',t.city,'required maxlength="100" autocomplete="address-level2"')+field('postcode',t.postcode,'inputmode="numeric" pattern="[0-9]{5}" maxlength="5"')+'<button type="button" id="lookup-branch" class="checkout-secondary">'+t.lookup+'</button><p id="delivery-status" role="status"></p><label id="branch-options-label" hidden>'+t.choose+'<select id="branch-options"><option value="">—</option></select></label>'+field('branch',t.branch,'required maxlength="200"')+'</fieldset><fieldset><legend>03 · '+t.payment+'</legend><div class="checkout-options"><label><input type="radio" name="payment" value="cod" checked>'+t.cod+'</label><label class="payment-pending"><input type="radio" name="payment" value="card" disabled>'+t.card+'<small>'+t.soon+'</small></label></div><p class="checkout-help">'+t.note+'</p></fieldset><label>'+t.comment+'<textarea name="comment" rows="3" maxlength="500">'+esc(draft.comment||'')+'</textarea></label></div><aside class="checkout-summary">'+summary()+'<p class="checkout-help">'+t.privacy+'</p><button class="checkout-start" type="submit">'+t.review+'</button></aside></div></form>';
- const form=$('#checkout-form');if(draft.carrier)form.elements.carrier.value=draft.carrier;
+ const form=$('#checkout-form'),deliveryState=deliveryAvailability(config,draft.carrier);
+ for(const radio of form.elements.carrier){radio.disabled=!deliveryState.available[radio.value];radio.checked=radio.value===deliveryState.selected;radio.closest('label').classList.toggle('payment-pending',radio.disabled);}
+ if(!deliveryState.selected){form.querySelector('[type="submit"]').disabled=true;$('#delivery-status').textContent=checkoutMessages[lang].none;}
  const countryLabel={uk:'Країна телефонного номера',ru:'Страна телефонного номера',en:'Phone number country'}[lang];
  const phoneError={uk:'Перевірте номер телефону з кодом країни.',ru:'Проверьте номер телефона с кодом страны.',en:'Check the phone number and country calling code.'}[lang];
  const phoneInput=form.elements.phone;phoneInput.maxLength=40;phoneInput.placeholder='+380';
@@ -25,7 +28,7 @@ function render(){
  phoneInput.value=draft.phone||'+380';let previousCode=countryCodes[countrySelect.value];
  countrySelect.addEventListener('change',()=>{let national=phoneInput.value.replace(/[\s().-]/g,'');if(national.startsWith('+'+previousCode))national=national.slice(previousCode.length+1);else if(national.startsWith('+'))national='';previousCode=countryCodes[countrySelect.value];phoneInput.value='+'+previousCode+national;phoneInput.setCustomValidity('');phoneInput.focus();});
  phoneInput.addEventListener('blur',()=>{try{const normalized=normalizePhone(phoneInput.value);const countries=phoneCountries(lang).filter(x=>normalized.startsWith('+'+x.code));const longest=Math.max(...countries.map(x=>x.code.length));const selected=countries.find(x=>x.id===countrySelect.value&&x.code.length===longest)||countries.find(x=>x.code.length===longest);if(selected){countrySelect.value=selected.id;previousCode=selected.code;}phoneInput.value=normalized;}catch{}});
- function change(){const ukr=form.elements.carrier.value==='ukr';form.elements.postcode.closest('label').hidden=!ukr;form.elements.postcode.required=ukr;$('#delivery-status').textContent=config[ukr?'ukr':'nova']?'':t.unavailable;$('#lookup-branch').disabled=!config[ukr?'ukr':'nova'];$('#branch-options-label').hidden=true}
+ function change(){const selected=form.elements.carrier.value,ukr=selected==='ukr';form.elements.postcode.closest('label').hidden=!ukr;form.elements.postcode.required=ukr;$('#delivery-status').textContent=deliveryState.selected?(config[selected]?'':checkoutMessages[lang].unavailable):checkoutMessages[lang].none;$('#lookup-branch').disabled=!config[selected];$('#branch-options-label').hidden=true}
  change();form.elements.carrier.forEach(r=>r.addEventListener('change',()=>{form.elements.branch.value='';change()}));
  $('#lookup-branch').addEventListener('click',async()=>{const carrier=form.elements.carrier.value;if(carrier==='nova')return;const q=form.elements.postcode.value;if(!q)return;const button=$('#lookup-branch');button.disabled=true;try{const res=await fetch('/api/delivery?carrier='+carrier+'&q='+encodeURIComponent(q));if(!res.ok)throw Error();const data=await res.json();$('#branch-options').innerHTML='<option value="">'+t.choose+'</option>'+data.branches.map(b=>'<option data-office-id="'+esc(b.id)+'" value="'+esc(b.label)+'">'+esc(b.label)+'</option>').join('');$('#branch-options-label').hidden=false;$('#delivery-status').textContent=data.branches.length?'':t.error}catch{$('#delivery-status').textContent=t.error}finally{button.disabled=false}});
  $('#branch-options').addEventListener('change',e=>form.elements.branch.value=e.target.value);
@@ -63,7 +66,22 @@ async function submitOrder(e){
  }catch(error){$('#order-error').textContent=error.message||o.error;if(button)button.disabled=false;if($('#edit-order'))$('#edit-order').disabled=false;}
  finally{submitting=false;}
 }
-document.addEventListener('click',async e=>{if(!e.target.closest('[data-checkout]'))return;lang=document.documentElement.lang in copy?document.documentElement.lang:'uk';rows=readCart();if(!rows.length)return;try{const r=await fetch('/api/catalog');if(!r.ok)throw Error();catalog=await r.json();const status=await fetch('/api/commerce');if(!status.ok)throw Error();const commerce=await status.json();config=commerce.delivery;orderAllowed=!!commerce.orders;}catch{return}$('#shop-dialog').close();render();$('#checkout-dialog').showModal();track("checkout_start")});
+let loadingCheckout=false;
+async function openCheckout(){
+ if(loadingCheckout||submitting)return;
+ lang=document.documentElement.lang in copy?document.documentElement.lang:'uk';rows=readCart();if(!Array.isArray(rows)||!rows.length)return;
+ loadingCheckout=true;const dialog=$('#checkout-dialog');$('#shop-dialog').close();
+ $('#checkout-content').innerHTML='<h2 id="checkout-title">'+c().title+'</h2><p role="status">'+checkoutMessages[lang].loading+'</p>';
+ if(!dialog.open)dialog.showModal();
+ try{
+  const data=await loadCheckoutData();catalog=data.catalog;config=data.config;orderAllowed=data.orderAllowed;render();track('checkout_start');
+ }catch{
+  orderAllowed=false;config={nova:false,ukr:false};
+  $('#checkout-content').innerHTML='<h2 id="checkout-title">'+c().title+'</h2><p role="alert">'+checkoutMessages[lang].failed+'</p><button type="button" id="retry-checkout" class="checkout-start">'+checkoutMessages[lang].retry+'</button>';
+  $('#retry-checkout').onclick=openCheckout;
+ }finally{loadingCheckout=false;}
+}
+document.addEventListener('click',e=>{if(e.target.closest('[data-checkout]'))openCheckout();});
 $('#close-checkout').addEventListener('click',()=>$('#checkout-dialog').close());
 fetch('/api/commerce').then(r=>r.ok?r.json():null).then(x=>{if(x){config=x.delivery;orderAllowed=!!x.orders;}}).catch(()=>{});
 import {track,attribution} from "./analytics.js";

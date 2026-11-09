@@ -4,6 +4,7 @@ import {credentialsReady} from '../../../../lib/admin-session';
 import {acceptingOrders} from '../../../../lib/crm';
 import {usesSupabase,supabaseProducts,supabaseClient} from '../../../../lib/supabase-catalog.mjs';
 import {crmRPC} from '../../../../lib/supabase-crm.mjs';
+import {launchConfigurationChecks} from '../../../../lib/launch-configuration.mjs';
 
 export async function GET(request:Request){
   try{
@@ -19,9 +20,9 @@ export async function GET(request:Request){
         {label:'CRM Supabase',ready:crm,detail:crm?'CRM підключено: статуси, фактичні надходження, повернення та рух залишків. Старі D1-замовлення не змішуються.':'Перевірте міграції 009–010 і підключення CRM.'},
         {label:'Приймання нових замовлень',ready:await acceptingOrders(),detail:'Окремий дозвіл сервера й налаштування адміністратора. До дозволеного запуску залишається закритим.'},
         {label:'LiqPay',ready:false,detail:env.LIQPAY_PUBLIC_KEY&&env.LIQPAY_PRIVATE_KEY?'Sandbox-маршрути підготовлено. Міграція 006, HTTPS webhook і реальна тестова транзакція ще потребують перевірки. Реальні платежі заборонено.':'Потрібен бізнес-кабінет LiqPay, sandbox-ключі й HTTPS webhook. Серверні маршрути підготовлено; онлайн-оплата вимкнена.'},
-        {label:'Нова пошта',ready:false,detail:env.NOVA_POSHTA_API_KEY?'Ключ задано. Потрібна перевірка справжніх відділень і збереження доставки в замовленні.':'Потрібен кабінет власниці й API-ключ. Пошук відділень вимкнений; вигадані дані не підставляються.'},
+        ...launchConfigurationChecks(env),
         {label:'Укрпошта',ready:false,detail:env.UKRPOSHTA_BEARER?'Bearer задано. Потрібна перевірка справжніх відділень за індексом і доставки в замовленні.':'Потрібен API-доступ за договором власниці. Пошук за індексом вимкнений до підключення bearer.'},
-        {label:'Повна резервна копія',ready:false,detail:'Перед публікацією потрібна перевірена копія бази та фотографій.'}
+        {label:'Резервна копія · перед запуском',ready:false,detail:'Локальна зашифрована копія даних/фото та перевірка відновлення підготовлені. Цей сервер не підтверджує актуальність локальних файлів. Перед запуском потрібні свіжа копія поза комп’ютером і окрема копія ключа; Auth, D1 і секрети відновлюються окремо.'}
       ]});
     }
     const count=await db().prepare('SELECT COUNT(*) AS total FROM products WHERE archived=0').first<{total:number}>();
